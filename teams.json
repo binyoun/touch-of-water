@@ -45,6 +45,17 @@
   },
   {
     "id": 5,
+    "name": "Raining Jun",
+    "lat": 2.92583, "lng": 101.64250,
+    "model": "teams/team5/model.glb",
+    "sound": "teams/team5/sound.mp3",
+    "textEn": "Floating Orbiting Raining Really",
+    "textNative": "억수로 비오는 와중 두둥실 회전중",
+    "lang": "Korean",
+    "placeholder": false
+  },
+  {
+    "id": 6,
     "name": "Demo",
     "lat": 2.9240, "lng": 101.6401,
     "model": "teams/demo/model.glb",
