@@ -169,6 +169,7 @@
 <script type="module">
 import * as THREE from 'three'
 import { GLTFLoader }     from 'three/addons/loaders/GLTFLoader.js'
+import { DRACOLoader }    from 'three/addons/loaders/DRACOLoader.js'
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 
@@ -219,7 +220,11 @@ const anchor    = new THREE.Group()
 anchor.visible  = false
 scene.add(anchor)
 
+const draco = new DRACOLoader()
+draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/')
+
 const loader = new GLTFLoader()
+loader.setDRACOLoader(draco)
 loader.setMeshoptDecoder(MeshoptDecoder)
 
 loader.load(
