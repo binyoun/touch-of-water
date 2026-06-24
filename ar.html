@@ -116,6 +116,10 @@
       font-size: 1.2rem; letter-spacing: 0.1em;
       opacity: 0.35; margin-top: 0.5rem;
     }
+    #intro-members {
+      font-size: 1rem; letter-spacing: 0.14em;
+      opacity: 0.45; margin-top: 0.6rem; line-height: 1.8;
+    }
     #intro-text { margin-top: 2.2rem; }
     #intro-text-en     { font-size: 1.64rem; line-height: 1.7; opacity: 0.72; }
     #intro-text-native { font-size: 1.52rem; line-height: 1.7; opacity: 0.32; margin-top: 0.4rem; }
@@ -161,6 +165,7 @@
   <div id="intro-top">
     <div id="intro-label">Touch of Water</div>
     <div id="intro-name"></div>
+    <div id="intro-members"></div>
     <div id="intro-gps"></div>
     <div id="intro-text">
       <div id="intro-text-en"></div>
@@ -198,6 +203,7 @@ const team    = teams[Math.min(teamIdx, teams.length - 1)]
 // ── Populate intro ────────────────────────────────────────────
 document.title = `Touch of Water · ${team.name}`
 document.getElementById('intro-name').textContent        = team.name
+document.getElementById('intro-members').textContent     = team.members || ''
 document.getElementById('intro-gps').textContent         = (team.lat && team.lng)
   ? `${team.lat.toFixed(5)},  ${team.lng.toFixed(5)}`
   : ''

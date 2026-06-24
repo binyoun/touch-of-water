@@ -2,6 +2,7 @@
   {
     "id": 1,
     "name": "Marlboro",
+    "members": "Siti Aisyah, Lee Jie Teng, Rohma, Tanjia Ahsan, Imrooz Shimu",
     "lat": 2.92639, "lng": 101.64278,
     "model": "teams/team1/model.glb",
     "sound": "teams/team1/sound.mp3",
@@ -13,6 +14,7 @@
   {
     "id": 2,
     "name": "One More Cup",
+    "members": "Ammar, Low Chee Keong",
     "lat": 2.92750, "lng": 101.64139,
     "model": "teams/team2/model.glb",
     "sound": "teams/team2/sound.mp3",
@@ -24,6 +26,7 @@
   {
     "id": 3,
     "name": "Baling Selipar",
+    "members": "Syahrul Imran, Aizuddin Haiqal",
     "lat": 2.92580, "lng": 101.64278,
     "model": "teams/team3/model.glb",
     "sound": "teams/team3/sound.mp3",
@@ -35,6 +38,7 @@
   {
     "id": 4,
     "name": "Nova",
+    "members": "Danish Sohail, Hamisi Hussein, Amdad Hossain",
     "lat": 2.925284, "lng": 101.644102,
     "model": "teams/team4/model.glb",
     "sound": "teams/team4/sound.mp3",
@@ -46,6 +50,7 @@
   {
     "id": 5,
     "name": "Raining Jun",
+    "members": "Bin Youn, Suk-Jun Kim",
     "lat": 2.92583, "lng": 101.64250,
     "model": "teams/team5/model.glb",
     "sound": "teams/team5/sound.mp3",
