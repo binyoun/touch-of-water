@@ -1,0 +1,68 @@
+[
+  {
+    "id": 1,
+    "name": "Team 1",
+    "lat": 2.9232, "lng": 101.6378,
+    "model": "models/team1.glb",
+    "sound": "sounds/team1.mp3",
+    "textEn": "",
+    "textNative": "",
+    "lang": "",
+    "placeholder": true
+  },
+  {
+    "id": 2,
+    "name": "Team 2",
+    "lat": 2.9272, "lng": 101.6385,
+    "model": "models/team2.glb",
+    "sound": "sounds/team2.mp3",
+    "textEn": "",
+    "textNative": "",
+    "lang": "",
+    "placeholder": true
+  },
+  {
+    "id": 3,
+    "name": "Team 3",
+    "lat": 2.9252, "lng": 101.6401,
+    "model": "models/team3.glb",
+    "sound": "sounds/team3.mp3",
+    "textEn": "",
+    "textNative": "",
+    "lang": "",
+    "placeholder": true
+  },
+  {
+    "id": 4,
+    "name": "Team 4",
+    "lat": 2.9272, "lng": 101.6417,
+    "model": "models/team4.glb",
+    "sound": "sounds/team4.mp3",
+    "textEn": "",
+    "textNative": "",
+    "lang": "",
+    "placeholder": true
+  },
+  {
+    "id": 5,
+    "name": "Team 5",
+    "lat": 2.9232, "lng": 101.6424,
+    "model": "models/team5.glb",
+    "sound": "sounds/team5.mp3",
+    "textEn": "",
+    "textNative": "",
+    "lang": "",
+    "placeholder": true
+  },
+  {
+    "id": 6,
+    "name": "Demo",
+    "lat": 2.9244, "lng": 101.6401,
+    "model": "models/demo.glb",
+    "sound": "sounds/demo.mp3",
+    "textEn": "Water remembers what we forget.",
+    "textNative": "물은 우리가 잊은 것을 기억한다.",
+    "lang": "Korean",
+    "placeholder": false
+  }
+]

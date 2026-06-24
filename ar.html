@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Touch of Water · AR</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; }
+
+    body {
+      overflow: hidden;
+      background: #000;
+      font-family: 'Courier New', monospace;
+      color: #fff;
+    }
+
+    /* Camera feed with blue-shift membrane filter */
+    #cam {
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover; z-index: 0;
+      filter: saturate(0.14) brightness(0.58) hue-rotate(188deg);
+    }
+
+    #canvas { position: fixed; inset: 0; z-index: 1; }
+
+    #vignette {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none;
+      background: radial-gradient(ellipse at center,
+        transparent 28%, rgba(0,0,0,0.42) 68%, rgba(0,0,0,0.88) 100%);
+    }
+
+    #scanlines {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 3px,
+        rgba(0,0,0,0.048) 3px, rgba(0,0,0,0.048) 4px);
+    }
+
+    /* HUD */
+    #hud { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
+
+    #back {
+      position: absolute; top: 1.6rem; left: 1.6rem;
+      font-size: 0.55rem; letter-spacing: 0.22em; opacity: 0.38;
+      text-transform: uppercase; text-decoration: none; color: #fff;
+      pointer-events: all; transition: opacity 0.2s;
+    }
+    #back:hover { opacity: 0.85; }
+
+    #gps-label {
+      position: absolute; top: 1.6rem; right: 1.6rem;
+      font-size: 0.52rem; letter-spacing: 0.08em;
+      opacity: 0.3; text-align: right; line-height: 2;
+    }
+
+    #place-hint {
+      position: absolute; bottom: 3.5rem; left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.58rem; letter-spacing: 0.28em;
+      opacity: 0.42; text-transform: uppercase; white-space: nowrap;
+      transition: opacity 0.5s;
+    }
+
+    #interact-hint {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.5rem; letter-spacing: 0.2em;
+      opacity: 0; text-transform: uppercase; white-space: nowrap;
+      transition: opacity 0.4s; text-align: center; line-height: 2;
+    }
+
+    #text-block {
+      position: absolute; bottom: 3.5rem; left: 2rem; right: 2rem;
+      display: none;
+    }
+    #text-en     { font-size: 0.78rem; line-height: 1.7; opacity: 0.78; }
+    #text-native { font-size: 0.72rem; line-height: 1.7; opacity: 0.35; margin-top: 0.3rem; }
+
+    /* Intro screen */
+    #intro {
+      position: fixed; inset: 0; z-index: 100;
+      background: #040408;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: space-between;
+      padding: 3rem 2.2rem;
+      transition: opacity 0.8s;
+    }
+
+    #intro-top { width: 100%; }
+    #intro-label {
+      font-size: 0.48rem; letter-spacing: 0.3em;
+      opacity: 0.28; text-transform: uppercase;
+    }
+    #intro-name {
+      font-size: 2.2rem; letter-spacing: 0.12em;
+      font-weight: 400; margin-top: 0.7rem;
+    }
+    #intro-gps {
+      font-size: 0.6rem; letter-spacing: 0.1em;
+      opacity: 0.35; margin-top: 0.5rem;
+    }
+    #intro-text { margin-top: 2.2rem; }
+    #intro-text-en     { font-size: 0.82rem; line-height: 1.7; opacity: 0.72; }
+    #intro-text-native { font-size: 0.76rem; line-height: 1.7; opacity: 0.32; margin-top: 0.4rem; }
+
+    #intro-instructions {
+      width: 100%;
+      font-size: 0.5rem; letter-spacing: 0.18em;
+      opacity: 0.22; text-transform: uppercase; line-height: 2.4;
+    }
+
+    #intro-start {
+      padding: 0.95rem 2.6rem;
+      border: 1px solid rgba(255,255,255,0.28);
+      background: transparent; color: #fff;
+      font-family: 'Courier New', monospace;
+      font-size: 0.58rem; letter-spacing: 0.26em; text-transform: uppercase;
+      cursor: pointer; transition: border-color 0.25s;
+      margin-bottom: 1rem;
+    }
+    #intro-start:hover { border-color: rgba(255,255,255,0.65); }
+  </style>
+</head>
+<body>
+
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="canvas"></canvas>
+<div id="vignette"></div>
+<div id="scanlines"></div>
+
+<div id="hud">
+  <a id="back" href="./index.html">← Map</a>
+  <div id="gps-label"></div>
+  <div id="place-hint">Tap to place</div>
+  <div id="interact-hint">Drag to rotate<br>Pinch to resize · volume</div>
+  <div id="text-block">
+    <div id="text-en"></div>
+    <div id="text-native"></div>
+  </div>
+</div>
+
+<div id="intro">
+  <div id="intro-top">
+    <div id="intro-label">Touch of Water</div>
+    <div id="intro-name"></div>
+    <div id="intro-gps"></div>
+    <div id="intro-text">
+      <div id="intro-text-en"></div>
+      <div id="intro-text-native"></div>
+    </div>
+  </div>
+  <div id="intro-instructions">
+    Tap to place model &nbsp;·&nbsp; Drag to rotate<br>
+    Pinch to resize &nbsp;·&nbsp; Resize changes volume
+  </div>
+  <button id="intro-start">Open Camera · Start</button>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three":          "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/":  "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three'
+import { GLTFLoader }     from 'three/addons/loaders/GLTFLoader.js'
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js'
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
+
+// ── Team config ───────────────────────────────────────────────
+const params  = new URLSearchParams(location.search)
+const teamIdx = parseInt(params.get('team') ?? '5')
+const teams   = await fetch('./teams.json').then(r => r.json())
+const team    = teams[Math.min(teamIdx, teams.length - 1)]
+
+// ── Populate intro ────────────────────────────────────────────
+document.getElementById('intro-name').textContent        = team.name
+document.getElementById('intro-gps').textContent         = (team.lat && team.lng)
+  ? `${team.lat.toFixed(5)},  ${team.lng.toFixed(5)}`
+  : ''
+document.getElementById('intro-text-en').textContent     = team.textEn     || ''
+document.getElementById('intro-text-native').textContent = team.textNative || ''
+
+document.getElementById('gps-label').innerHTML = (team.lat && team.lng)
+  ? `${team.lat.toFixed(5)}<br>${team.lng.toFixed(5)}`
+  : ''
+document.getElementById('text-en').textContent     = team.textEn     || ''
+document.getElementById('text-native').textContent = team.textNative || ''
+
+// ── Renderer ──────────────────────────────────────────────────
+const canvas   = document.getElementById('canvas')
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true })
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
+renderer.setSize(innerWidth, innerHeight)
+renderer.setClearColor(0x000000, 0)
+renderer.toneMapping        = THREE.ACESFilmicToneMapping
+renderer.toneMappingExposure = 1.1
+
+// ── Scene ─────────────────────────────────────────────────────
+const scene = new THREE.Scene()
+const pmrem = new THREE.PMREMGenerator(renderer)
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+pmrem.dispose()
+
+scene.add(new THREE.AmbientLight(0xffffff, 1.5))
+const sun = new THREE.DirectionalLight(0xffffff, 2)
+sun.position.set(3, 6, 4)
+scene.add(sun)
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.001, 200)
+
+// ── Model anchor ──────────────────────────────────────────────
+const anchor    = new THREE.Group()
+anchor.visible  = false
+scene.add(anchor)
+
+const loader = new GLTFLoader()
+loader.setMeshoptDecoder(MeshoptDecoder)
+
+loader.load(
+  team.model,
+  gltf => {
+    const model = gltf.scene
+    model.traverse(n => {
+      if (!n.isMesh) return
+      const mats = Array.isArray(n.material) ? n.material : [n.material]
+      mats.forEach(m => { m.side = THREE.DoubleSide; m.depthWrite = true })
+    })
+    const box = new THREE.Box3().setFromObject(model)
+    const max = box.getSize(new THREE.Vector3()).length()
+    if (max > 0) model.scale.setScalar(1 / max)
+    const ctr = box.getCenter(new THREE.Vector3())
+    model.position.sub(ctr.multiplyScalar(1 / max))
+    anchor.add(model)
+  },
+  undefined,
+  () => {
+    // Fallback placeholder when no model file exists
+    const geo = new THREE.SphereGeometry(0.38, 24, 16)
+    const mat = new THREE.MeshBasicMaterial({ color: 0x0055cc, wireframe: true })
+    anchor.add(new THREE.Mesh(geo, mat))
+  }
+)
+
+// ── Audio ─────────────────────────────────────────────────────
+let sound = null
+
+function initAudio() {
+  sound = new Howl({
+    src:     [team.sound],
+    loop:    true,
+    volume:  0.28,
+    html5:   false,
+    onloaderror: () => console.warn('Sound not found:', team.sound)
+  })
+  sound.play()
+}
+
+// ── Camera feed ───────────────────────────────────────────────
+const video = document.getElementById('cam')
+
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } },
+      audio: false
+    })
+    video.srcObject = stream
+    await video.play()
+  } catch (err) {
+    console.warn('Camera denied:', err)
+  }
+}
+
+// ── Touch interaction ─────────────────────────────────────────
+let modelPlaced = false
+let modelScale  = 0.6
+let lastX       = 0
+let lastDist    = 0
+let hintTimer   = null
+
+anchor.scale.setScalar(modelScale)
+anchor.position.set(0, -0.25, -2)
+
+function placeModel() {
+  modelPlaced = true
+  anchor.visible = true
+  document.getElementById('place-hint').style.opacity = '0'
+  document.getElementById('text-block').style.display = 'block'
+
+  const hint = document.getElementById('interact-hint')
+  hint.style.opacity = '0.45'
+  clearTimeout(hintTimer)
+  hintTimer = setTimeout(() => { hint.style.opacity = '0' }, 3500)
+}
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault()
+  if (e.touches.length === 1) {
+    if (!modelPlaced) placeModel()
+    lastX = e.touches[0].clientX
+  }
+  if (e.touches.length === 2) {
+    lastDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    )
+  }
+}, { passive: false })
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault()
+  if (e.touches.length === 1 && modelPlaced) {
+    anchor.rotation.y += (e.touches[0].clientX - lastX) * 0.008
+    lastX = e.touches[0].clientX
+  }
+  if (e.touches.length === 2 && lastDist) {
+    const d = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    )
+    modelScale = Math.max(0.08, Math.min(3.2, modelScale * (d / lastDist)))
+    anchor.scale.setScalar(modelScale)
+    if (sound) sound.volume(Math.min(1, modelScale / 1.6))
+    lastDist = d
+  }
+}, { passive: false })
+
+canvas.addEventListener('touchend', e => {
+  if (e.touches.length < 2) lastDist = 0
+}, { passive: true })
+
+// Mouse fallback (desktop testing)
+let mouseDown = false
+canvas.addEventListener('mousedown', e => { mouseDown = true; lastX = e.clientX })
+canvas.addEventListener('mouseup',   () => { mouseDown = false })
+canvas.addEventListener('mousemove', e => {
+  if (!mouseDown || !modelPlaced) return
+  anchor.rotation.y += (e.clientX - lastX) * 0.006
+  lastX = e.clientX
+})
+canvas.addEventListener('click', () => { if (!modelPlaced) placeModel() })
+
+// ── Intro start ───────────────────────────────────────────────
+document.getElementById('intro-start').addEventListener('click', async () => {
+  const intro = document.getElementById('intro')
+  intro.style.opacity = '0'
+  setTimeout(() => intro.remove(), 820)
+  await startCamera()
+  initAudio()
+})
+
+// ── Render loop ───────────────────────────────────────────────
+renderer.setAnimationLoop(() => {
+  renderer.render(scene, camera)
+})
+
+// ── Resize ────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize(innerWidth, innerHeight)
+})
+</script>
+</body>
+</html>
