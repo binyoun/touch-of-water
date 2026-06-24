@@ -151,22 +151,31 @@ fetch('./teams.json')
       const isDemo    = team.id === 6
       const isPending = team.placeholder
 
-      const color  = isDemo ? '#ffffff' : isPending ? 'rgba(255,255,255,0.3)' : '#6ab4ff'
-      const glow   = isDemo ? 'box-shadow:0 0 10px 3px rgba(255,255,255,0.45);' : ''
-      const size   = isDemo ? 20 : 15
-      const label  = isDemo ? '◎' : team.id
-      const border = isPending ? '1px dashed' : '1.5px solid'
+      const TEAM_COLORS = {
+        1: '#ff6b6b',
+        2: '#69db7c',
+        3: '#ffd43b',
+        4: '#cc5de8',
+        5: '#74c0fc',
+        6: '#ffffff',
+      }
+      const baseColor = TEAM_COLORS[team.id] ?? '#ffffff'
+      const color     = isPending ? 'rgba(255,255,255,0.45)' : baseColor
+      const glow      = isPending ? '' : `box-shadow:0 0 8px 2px ${baseColor}88;`
+      const size      = isDemo ? 22 : 18
+      const label     = isDemo ? '◎' : team.id
+      const border    = isPending ? '1px dashed' : '2px solid'
 
       const icon = L.divIcon({
         className: 'dot-wrap',
-        iconSize:   [size + 12, size + 12],
-        iconAnchor: [(size + 12) / 2, (size + 12) / 2],
+        iconSize:   [size + 14, size + 14],
+        iconAnchor: [(size + 14) / 2, (size + 14) / 2],
         html: `<div class="dot-inner" style="
           width:${size}px; height:${size}px;
           border:${border} ${color};
           color:${color};
-          font-size:${Math.floor(size * 1.04)}px;
-          opacity:${isPending ? 0.55 : 1};
+          font-size:${Math.floor(size * 0.75)}px;
+          font-weight:600;
           ${glow}
         ">${label}</div>`
       })
