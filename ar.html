@@ -72,12 +72,27 @@
       transition: opacity 0.4s; text-align: center; line-height: 2;
     }
 
+    #team-name {
+      position: absolute; top: 1.6rem; left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.1rem; letter-spacing: 0.22em; opacity: 0;
+      text-transform: uppercase; white-space: nowrap;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.8);
+      transition: opacity 0.8s;
+    }
+
     #text-block {
       position: absolute; bottom: 3.5rem; left: 2rem; right: 2rem;
-      display: none;
+      opacity: 0; transition: opacity 0.8s;
     }
-    #text-en     { font-size: 1.56rem; line-height: 1.7; opacity: 0.78; }
-    #text-native { font-size: 1.44rem; line-height: 1.7; opacity: 0.35; margin-top: 0.3rem; }
+    #text-en     {
+      font-size: 1.56rem; line-height: 1.7;
+      text-shadow: 0 1px 10px rgba(0,0,0,0.9);
+    }
+    #text-native {
+      font-size: 1.44rem; line-height: 1.7; opacity: 0.55; margin-top: 0.3rem;
+      text-shadow: 0 1px 10px rgba(0,0,0,0.9);
+    }
 
     /* Intro screen */
     #intro {
@@ -133,6 +148,7 @@
 
 <div id="hud">
   <a id="back" href="./index.html">← Map</a>
+  <div id="team-name"></div>
   <div id="gps-label"></div>
   <div id="place-hint">Tap to place</div>
   <div id="interact-hint">Drag to rotate<br>Pinch to resize · volume</div>
@@ -188,6 +204,7 @@ document.getElementById('intro-gps').textContent         = (team.lat && team.lng
 document.getElementById('intro-text-en').textContent     = team.textEn     || ''
 document.getElementById('intro-text-native').textContent = team.textNative || ''
 
+document.getElementById('team-name').textContent  = team.name || ''
 document.getElementById('gps-label').innerHTML = (team.lat && team.lng)
   ? `${team.lat.toFixed(5)}<br>${team.lng.toFixed(5)}`
   : ''
@@ -297,7 +314,6 @@ function placeModel() {
   modelPlaced = true
   anchor.visible = true
   document.getElementById('place-hint').style.opacity = '0'
-  document.getElementById('text-block').style.display = 'block'
 
   const hint = document.getElementById('interact-hint')
   hint.style.opacity = '0.45'
@@ -451,6 +467,8 @@ document.getElementById('intro').addEventListener('click', () => {
   intro.style.opacity = '0'
   setTimeout(() => intro.remove(), 820)
   initAudio()
+  document.getElementById('team-name').style.opacity = '0.55'
+  document.getElementById('text-block').style.opacity = '1'
 })
 
 // ── Render loop ───────────────────────────────────────────────
