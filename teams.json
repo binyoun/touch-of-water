@@ -34,14 +34,14 @@
   },
   {
     "id": 4,
-    "name": "Team 4",
-    "lat": 2.9268, "lng": 101.6417,
+    "name": "Nova",
+    "lat": 2.925284, "lng": 101.644102,
     "model": "teams/team4/model.glb",
     "sound": "teams/team4/sound.mp3",
-    "textEn": "",
+    "textEn": "Standing beside this water, I wonder how many people have paused here before me and what memories they left behind.",
     "textNative": "",
     "lang": "",
-    "placeholder": true
+    "placeholder": false
   },
   {
     "id": 5,
