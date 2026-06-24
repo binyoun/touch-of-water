@@ -23,14 +23,14 @@
   },
   {
     "id": 3,
-    "name": "Team 3",
-    "lat": 2.9252, "lng": 101.6401,
+    "name": "Baling Selipar",
+    "lat": 2.92580, "lng": 101.64278,
     "model": "teams/team3/model.glb",
     "sound": "teams/team3/sound.mp3",
-    "textEn": "",
-    "textNative": "",
-    "lang": "",
-    "placeholder": true
+    "textEn": "Mud washes off, but a missed storm never returns",
+    "textNative": "Lumpur boleh dibersihkan, tetapi berat rindu tidak boleh kembali.",
+    "lang": "Malay",
+    "placeholder": false
   },
   {
     "id": 4,
