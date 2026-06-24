@@ -350,6 +350,13 @@ canvas.addEventListener('mousemove', e => {
 })
 canvas.addEventListener('click', () => { if (!modelPlaced) placeModel() })
 
+canvas.addEventListener('wheel', e => {
+  e.preventDefault()
+  modelScale = Math.max(0.08, Math.min(3.2, modelScale * (1 - e.deltaY * 0.001)))
+  anchor.scale.setScalar(modelScale)
+  if (sound) sound.volume(Math.min(1, modelScale / 1.6))
+}, { passive: false })
+
 // ── Camera starts immediately on page load ────────────────────
 startCamera()
 
