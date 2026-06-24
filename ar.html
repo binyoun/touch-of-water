@@ -75,10 +75,9 @@
     #team-name {
       position: absolute; top: 1.6rem; left: 50%;
       transform: translateX(-50%);
-      font-size: 1.1rem; letter-spacing: 0.22em; opacity: 0;
+      font-size: 1.2rem; letter-spacing: 0.22em; opacity: 0.55;
       text-transform: uppercase; white-space: nowrap;
       text-shadow: 0 1px 8px rgba(0,0,0,0.8);
-      transition: opacity 0.8s;
     }
 
     #text-block {
@@ -197,6 +196,7 @@ const teams   = await fetch('./teams.json').then(r => r.json())
 const team    = teams[Math.min(teamIdx, teams.length - 1)]
 
 // ── Populate intro ────────────────────────────────────────────
+document.title = `Touch of Water · ${team.name}`
 document.getElementById('intro-name').textContent        = team.name
 document.getElementById('intro-gps').textContent         = (team.lat && team.lng)
   ? `${team.lat.toFixed(5)},  ${team.lng.toFixed(5)}`
@@ -467,7 +467,6 @@ document.getElementById('intro').addEventListener('click', () => {
   intro.style.opacity = '0'
   setTimeout(() => intro.remove(), 820)
   initAudio()
-  document.getElementById('team-name').style.opacity = '0.55'
   document.getElementById('text-block').style.opacity = '1'
 })
 
