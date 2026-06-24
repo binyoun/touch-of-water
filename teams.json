@@ -54,15 +54,4 @@
     "lang": "Korean",
     "placeholder": false
   },
-  {
-    "id": 6,
-    "name": "Demo",
-    "lat": 2.9240, "lng": 101.6401,
-    "model": "teams/demo/model.glb",
-    "sound": "teams/demo/sound.mp3",
-    "textEn": "Water remembers what we forget.",
-    "textNative": "물은 우리가 잊은 것을 기억한다.",
-    "lang": "Korean",
-    "placeholder": false
-  }
 ]
