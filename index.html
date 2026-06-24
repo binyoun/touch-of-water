@@ -181,9 +181,6 @@ fetch('./teams.json')
         html += `<div class="p-pending">GPS pending</div>`
       }
 
-      if (team.textEn)     html += `<div class="p-text-en">${team.textEn}</div>`
-      if (team.textNative) html += `<div class="p-text-native">${team.textNative}</div>`
-
       html += `<a class="p-btn" href="ar.html?team=${team.id - 1}">Enter AR →</a>`
 
       L.marker([team.lat, team.lng], { icon })

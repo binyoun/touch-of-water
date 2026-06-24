@@ -368,49 +368,65 @@ const ctx = tc.getContext('2d')
 tc.width  = innerWidth
 tc.height = innerHeight
 
-// Build token pool from team content + GPS
-const tokens = []
-if (team.textEn)     tokens.push(...team.textEn.split(/\s+/))
-if (team.textNative) tokens.push(...[...team.textNative])   // character-by-character for CJK/Korean
-if (team.lat && team.lng) {
-  const gps = `${team.lat.toFixed(5)} ${team.lng.toFixed(5)}`
-  tokens.push(...gps.split(''))
+// Build phrase-level chunks (full sentences, GPS as one string, short splits)
+const chunks = []
+if (team.textEn) {
+  chunks.push(team.textEn)
+  const w = team.textEn.split(' ')
+  if (w.length >= 4) {
+    const mid = Math.ceil(w.length / 2)
+    chunks.push(w.slice(0, mid).join(' '))
+    chunks.push(w.slice(mid).join(' '))
+  }
 }
-if (tokens.length === 0) tokens.push('water', '물', '2.9', '101.6')
+if (team.textNative) {
+  chunks.push(team.textNative)
+}
+if (team.lat && team.lng) {
+  chunks.push(`${team.lat.toFixed(5)},  ${team.lng.toFixed(5)}`)
+  chunks.push(`${team.lat.toFixed(5)}`)
+  chunks.push(`${team.lng.toFixed(5)}`)
+}
+if (chunks.length === 0) chunks.push('water  물  2.9244  101.6401')
 
-function randToken() { return tokens[Math.floor(Math.random() * tokens.length)] }
+function randChunk() { return chunks[Math.floor(Math.random() * chunks.length)] }
 
-const PARTICLE_COUNT = 38
+const STREAM_COUNT = 10
 
-const particles = Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
-  text:      randToken(),
-  x:         Math.random() * innerWidth,
-  baseY:     Math.random() * innerHeight,
-  y:         0,
-  vx:        (Math.random() < 0.5 ? 1 : -1) * (0.12 + Math.random() * 0.28),
-  vy:        (Math.random() - 0.5) * 0.04,
-  amplitude: 18 + Math.random() * 38,
-  freq:      0.0008 + Math.random() * 0.0012,
-  phase:     Math.random() * Math.PI * 2,
-  opacity:   0.055 + Math.random() * 0.10,
-  size:      12 + Math.floor(Math.random() * 12),
-  t:         Math.random() * 6000,
-}))
+const streams = Array.from({ length: STREAM_COUNT }, () => {
+  const goRight = Math.random() < 0.5
+  return {
+    text:      randChunk(),
+    x:         goRight ? -innerWidth * Math.random() : innerWidth * (1 + Math.random()),
+    baseY:     innerHeight * (0.08 + Math.random() * 0.84),
+    y:         0,
+    vx:        (goRight ? 1 : -1) * (0.28 + Math.random() * 0.32),
+    vy:        (Math.random() - 0.5) * 0.018,
+    amplitude: 24 + Math.random() * 44,
+    freq:      0.00035 + Math.random() * 0.00045,
+    phase:     Math.random() * Math.PI * 2,
+    opacity:   0.10 + Math.random() * 0.13,
+    size:      16 + Math.floor(Math.random() * 10),
+    t:         Math.random() * 8000,
+  }
+})
 
 function drawTextFlow() {
   ctx.clearRect(0, 0, tc.width, tc.height)
-  const now = performance.now()
 
-  particles.forEach(p => {
-    p.t    += 16
-    p.x    += p.vx
+  streams.forEach(p => {
+    p.t     += 16
+    p.x     += p.vx
     p.baseY += p.vy
-    p.y     = p.baseY + Math.sin(p.t * p.freq * Math.PI * 2 + p.phase) * p.amplitude
+    p.y      = p.baseY + Math.sin(p.t * p.freq * Math.PI * 2 + p.phase) * p.amplitude
 
-    if (p.x >  innerWidth  + 120) { p.x = -80;          p.text = randToken() }
-    if (p.x < -120)               { p.x = innerWidth + 80; p.text = randToken() }
-    if (p.baseY >  innerHeight + 60) p.baseY = -40
-    if (p.baseY < -60)              p.baseY = innerHeight + 40
+    const goRight = p.vx > 0
+    const textW   = p.text.length * p.size * 0.62
+
+    if (goRight  && p.x >  innerWidth  + textW + 40) { p.x = -textW - 20; p.text = randChunk() }
+    if (!goRight && p.x < -textW - 40)               { p.x = innerWidth + 20; p.text = randChunk() }
+    if (p.baseY >  innerHeight + 50) p.baseY = -30
+    if (p.baseY < -50)               p.baseY = innerHeight + 30
 
     ctx.save()
     ctx.globalAlpha = p.opacity
