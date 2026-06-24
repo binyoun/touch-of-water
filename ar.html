@@ -23,16 +23,17 @@
       filter: saturate(0.14) brightness(0.58) hue-rotate(188deg);
     }
 
-    #canvas { position: fixed; inset: 0; z-index: 1; }
+    #text-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+    #canvas      { position: fixed; inset: 0; z-index: 2; }
 
     #vignette {
-      position: fixed; inset: 0; z-index: 2; pointer-events: none;
+      position: fixed; inset: 0; z-index: 3; pointer-events: none;
       background: radial-gradient(ellipse at center,
         transparent 28%, rgba(0,0,0,0.42) 68%, rgba(0,0,0,0.88) 100%);
     }
 
     #scanlines {
-      position: fixed; inset: 0; z-index: 2; pointer-events: none;
+      position: fixed; inset: 0; z-index: 4; pointer-events: none;
       background: repeating-linear-gradient(
         0deg, transparent, transparent 3px,
         rgba(0,0,0,0.048) 3px, rgba(0,0,0,0.048) 4px);
@@ -125,6 +126,7 @@
 <body>
 
 <video id="cam" autoplay playsinline muted></video>
+<canvas id="text-canvas"></canvas>
 <canvas id="canvas"></canvas>
 <div id="vignette"></div>
 <div id="scanlines"></div>
@@ -305,6 +307,7 @@ function placeModel() {
 
 canvas.addEventListener('touchstart', e => {
   e.preventDefault()
+  isDragging = true
   if (e.touches.length === 1) {
     if (!modelPlaced) placeModel()
     lastX = e.touches[0].clientX
@@ -337,12 +340,14 @@ canvas.addEventListener('touchmove', e => {
 
 canvas.addEventListener('touchend', e => {
   if (e.touches.length < 2) lastDist = 0
+  if (e.touches.length === 0) isDragging = false
 }, { passive: true })
 
 // Mouse fallback (desktop testing)
-let mouseDown = false
-canvas.addEventListener('mousedown', e => { mouseDown = true; lastX = e.clientX })
-canvas.addEventListener('mouseup',   () => { mouseDown = false })
+let mouseDown  = false
+let isDragging = false
+canvas.addEventListener('mousedown', e => { mouseDown = true; isDragging = true; lastX = e.clientX })
+canvas.addEventListener('mouseup',   () => { mouseDown = false; isDragging = false })
 canvas.addEventListener('mousemove', e => {
   if (!mouseDown || !modelPlaced) return
   anchor.rotation.y += (e.clientX - lastX) * 0.006
@@ -357,6 +362,70 @@ canvas.addEventListener('wheel', e => {
   if (sound) sound.volume(Math.min(1, modelScale / 1.6))
 }, { passive: false })
 
+// ── Text flow canvas ──────────────────────────────────────────
+const tc  = document.getElementById('text-canvas')
+const ctx = tc.getContext('2d')
+tc.width  = innerWidth
+tc.height = innerHeight
+
+// Build token pool from team content + GPS
+const tokens = []
+if (team.textEn)     tokens.push(...team.textEn.split(/\s+/))
+if (team.textNative) tokens.push(...[...team.textNative])   // character-by-character for CJK/Korean
+if (team.lat && team.lng) {
+  const gps = `${team.lat.toFixed(5)} ${team.lng.toFixed(5)}`
+  tokens.push(...gps.split(''))
+}
+if (tokens.length === 0) tokens.push('water', '물', '2.9', '101.6')
+
+function randToken() { return tokens[Math.floor(Math.random() * tokens.length)] }
+
+const PARTICLE_COUNT = 38
+
+const particles = Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
+  text:      randToken(),
+  x:         Math.random() * innerWidth,
+  baseY:     Math.random() * innerHeight,
+  y:         0,
+  vx:        (Math.random() < 0.5 ? 1 : -1) * (0.12 + Math.random() * 0.28),
+  vy:        (Math.random() - 0.5) * 0.04,
+  amplitude: 18 + Math.random() * 38,
+  freq:      0.0008 + Math.random() * 0.0012,
+  phase:     Math.random() * Math.PI * 2,
+  opacity:   0.055 + Math.random() * 0.10,
+  size:      12 + Math.floor(Math.random() * 12),
+  t:         Math.random() * 6000,
+}))
+
+function drawTextFlow() {
+  ctx.clearRect(0, 0, tc.width, tc.height)
+  const now = performance.now()
+
+  particles.forEach(p => {
+    p.t    += 16
+    p.x    += p.vx
+    p.baseY += p.vy
+    p.y     = p.baseY + Math.sin(p.t * p.freq * Math.PI * 2 + p.phase) * p.amplitude
+
+    if (p.x >  innerWidth  + 120) { p.x = -80;          p.text = randToken() }
+    if (p.x < -120)               { p.x = innerWidth + 80; p.text = randToken() }
+    if (p.baseY >  innerHeight + 60) p.baseY = -40
+    if (p.baseY < -60)              p.baseY = innerHeight + 40
+
+    ctx.save()
+    ctx.globalAlpha = p.opacity
+    ctx.fillStyle   = '#cce8ff'
+    ctx.font        = `${p.size}px 'Courier New', monospace`
+    ctx.fillText(p.text, p.x, p.y)
+    ctx.restore()
+  })
+}
+
+window.addEventListener('resize', () => {
+  tc.width  = innerWidth
+  tc.height = innerHeight
+})
+
 // ── Camera starts immediately on page load ────────────────────
 startCamera()
 
@@ -370,6 +439,8 @@ document.getElementById('intro').addEventListener('click', () => {
 
 // ── Render loop ───────────────────────────────────────────────
 renderer.setAnimationLoop(() => {
+  if (modelPlaced && !isDragging) anchor.rotation.y += 0.004
+  drawTextFlow()
   renderer.render(scene, camera)
 })
 
