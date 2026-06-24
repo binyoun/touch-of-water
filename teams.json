@@ -1,14 +1,14 @@
 [
   {
     "id": 1,
-    "name": "Team 1",
-    "lat": 2.9232, "lng": 101.6378,
+    "name": "Marlboro",
+    "lat": 2.92639, "lng": 101.64278,
     "model": "teams/team1/model.glb",
     "sound": "teams/team1/sound.mp3",
-    "textEn": "",
-    "textNative": "",
-    "lang": "",
-    "placeholder": true
+    "textEn": "It rained the kind of heavy that makes you stop. So we did. Recorded it, blew bubbles, let the afternoon go soft on us.",
+    "textNative": "Cipta sedikit keceriaan dalam hidupmu.",
+    "lang": "Malay",
+    "placeholder": false
   },
   {
     "id": 2,
