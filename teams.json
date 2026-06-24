@@ -12,14 +12,14 @@
   },
   {
     "id": 2,
-    "name": "Team 2",
-    "lat": 2.9268, "lng": 101.6392,
+    "name": "One More Cup",
+    "lat": 2.92750, "lng": 101.64139,
     "model": "teams/team2/model.glb",
     "sound": "teams/team2/sound.mp3",
-    "textEn": "",
-    "textNative": "",
-    "lang": "",
-    "placeholder": true
+    "textEn": "The reasoning of the coffee making sound, it unlocks a memory of students ordering coffee in the uni's designated cafe. \"One more cup\" is the familiar phrase we always hear in the library, student lounge, classrooms, studio — by students wanting to keep going to catch up to a deadline.",
+    "textNative": "Bunyi membuat kopi itu mengingatkan satu memori tentang pelajar memesan kopi di kafe yang ditetapkan di universiti. \"Satu cawan lagi\" adalah frasa yang biasa kita dengar di perpustakaan, ruang santai pelajar, bilik darjah, studio — oleh pelajar yang ingin terus berjaga untuk mengejar tarikh akhir.",
+    "lang": "Malay",
+    "placeholder": false
   },
   {
     "id": 3,
