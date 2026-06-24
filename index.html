@@ -137,7 +137,7 @@ L.tileLayer(
 ).addTo(map)
 
 fetch('./teams.json')
-  .then(r => r.json())
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json() })
   .then(teams => {
     // Polyline connecting all 6 dots in order
     const coords = teams.map(t => [t.lat, t.lng])
@@ -197,6 +197,11 @@ fetch('./teams.json')
         .bindPopup(html, { maxWidth: 260 })
         .addTo(map)
     })
+  })
+  .catch(err => {
+    console.error('teams.json failed:', err)
+    document.body.insertAdjacentHTML('beforeend',
+      `<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#f66;font-family:monospace;font-size:1rem;z-index:9999">Could not load teams.json: ${err.message}</div>`)
   })
 </script>
 </body>
