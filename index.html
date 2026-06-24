@@ -29,10 +29,10 @@
       pointer-events: none;
     }
     #header h1 {
-      font-size: 1.05rem; letter-spacing: 0.22em; font-weight: 400;
+      font-size: 2.1rem; letter-spacing: 0.22em; font-weight: 400;
     }
     #header .sub {
-      font-size: 0.5rem; letter-spacing: 0.22em;
+      font-size: 1rem; letter-spacing: 0.22em;
       color: rgba(255,255,255,0.32); text-transform: uppercase;
       margin-top: 0.5rem; line-height: 2.2;
     }
@@ -45,7 +45,7 @@
       pointer-events: none;
     }
     #footer .credits {
-      font-size: 0.45rem; letter-spacing: 0.18em;
+      font-size: 0.9rem; letter-spacing: 0.18em;
       color: rgba(255,255,255,0.25); text-transform: uppercase; line-height: 2.4;
     }
 
@@ -68,22 +68,22 @@
     .leaflet-popup-close-button {
       color: rgba(255,255,255,0.35) !important;
       top: 0.5rem !important; right: 0.6rem !important;
-      font-size: 1rem !important;
+      font-size: 2rem !important;
     }
 
-    .p-label  { font-size: 0.5rem; letter-spacing: 0.25em; opacity: 0.3; text-transform: uppercase; }
-    .p-name   { font-size: 1rem; letter-spacing: 0.1em; margin: 0.35rem 0 0.25rem; }
-    .p-gps    { font-size: 0.6rem; letter-spacing: 0.08em; opacity: 0.38; margin-bottom: 0.8rem; }
-    .p-text-en     { font-size: 0.72rem; line-height: 1.65; }
-    .p-text-native { font-size: 0.68rem; line-height: 1.65; opacity: 0.42; margin-top: 0.25rem; }
-    .p-pending { font-size: 0.55rem; opacity: 0.28; text-transform: uppercase; letter-spacing: 0.2em; margin: 0.5rem 0; }
+    .p-label  { font-size: 1rem; letter-spacing: 0.25em; opacity: 0.3; text-transform: uppercase; }
+    .p-name   { font-size: 2rem; letter-spacing: 0.1em; margin: 0.35rem 0 0.25rem; }
+    .p-gps    { font-size: 1.2rem; letter-spacing: 0.08em; opacity: 0.38; margin-bottom: 0.8rem; }
+    .p-text-en     { font-size: 1.44rem; line-height: 1.65; }
+    .p-text-native { font-size: 1.36rem; line-height: 1.65; opacity: 0.42; margin-top: 0.25rem; }
+    .p-pending { font-size: 1.1rem; opacity: 0.28; text-transform: uppercase; letter-spacing: 0.2em; margin: 0.5rem 0; }
 
     .p-btn {
       display: block; margin-top: 1rem;
       padding: 0.55rem 1rem;
       border: 1px solid rgba(255,255,255,0.22);
       background: transparent; color: #fff;
-      font-family: 'Courier New', monospace; font-size: 0.55rem;
+      font-family: 'Courier New', monospace; font-size: 1.1rem;
       letter-spacing: 0.22em; text-transform: uppercase;
       cursor: pointer; text-align: center; text-decoration: none;
       transition: border-color 0.2s;
@@ -164,7 +164,7 @@ fetch('./teams.json')
           width:${size}px; height:${size}px;
           border:${border} ${color};
           color:${color};
-          font-size:${Math.floor(size * 0.52)}px;
+          font-size:${Math.floor(size * 1.04)}px;
           opacity:${isPending ? 0.55 : 1};
           ${glow}
         ">${label}</div>`
