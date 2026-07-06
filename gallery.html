@@ -24,15 +24,36 @@
       color: rgba(255,255,255,0.32); text-transform: uppercase;
       margin-top: 0.5rem; line-height: 2;
     }
-    header a.back {
-      display: inline-block; margin-top: 1rem;
+    header a.back, header a.brief {
+      display: inline-block; margin-top: 1rem; margin-right: 0.6rem;
       padding: 0.45rem 0.9rem;
       border: 1px solid rgba(255,255,255,0.22);
       color: #fff; text-decoration: none;
       font-size: 0.8rem; letter-spacing: 0.22em; text-transform: uppercase;
       transition: border-color 0.2s;
     }
-    header a.back:hover { border-color: rgba(255,255,255,0.6); }
+    header a.back:hover, header a.brief:hover { border-color: rgba(255,255,255,0.6); }
+
+    /* Poster */
+    #poster {
+      padding: 0.5rem 2rem 0.5rem;
+      max-width: 420px;
+    }
+    #poster figure {
+      cursor: pointer; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    #poster img {
+      width: 100%; display: block;
+      transition: filter 0.35s ease;
+      filter: saturate(0.92);
+    }
+    #poster figure:hover img { filter: saturate(1); }
+    #poster .caption {
+      font-size: 0.78rem; letter-spacing: 0.2em;
+      color: rgba(255,255,255,0.3); text-transform: uppercase;
+      margin: 0.7rem 0 1rem; line-height: 1.8;
+    }
 
     #grid {
       display: grid;
@@ -110,7 +131,16 @@
     MMU · Cyberjaya · 24 June 2026
   </div>
   <a class="back" href="index.html">← Map</a>
+  <a class="brief" href="docs/workshop-brief.pdf" target="_blank" rel="noopener">Workshop Brief (PDF)</a>
 </header>
+
+<div id="poster">
+  <figure id="poster-fig">
+    <img src="images/workshop/poster.jpg"
+      alt="Touch of Water workshop poster, Faculty of Creative Multimedia, MMU, 24 June 2026">
+  </figure>
+  <div class="caption">Workshop Poster · ReCollab FCM</div>
+</div>
 
 <div id="grid"></div>
 
@@ -131,14 +161,19 @@
 </div>
 
 <script>
-const TOTAL = 22
+const ITEMS = ['images/workshop/poster.jpg']
+for (let i = 1; i <= 22; i++) {
+  ITEMS.push(`images/workshop/mmu-${String(i).padStart(2, '0')}.jpg`)
+}
+
 const grid = document.getElementById('grid')
 
-for (let i = 1; i <= TOTAL; i++) {
-  const n = String(i).padStart(2, '0')
+document.getElementById('poster-fig').addEventListener('click', () => openLightbox(0))
+
+for (let i = 1; i < ITEMS.length; i++) {
   const fig = document.createElement('figure')
-  fig.innerHTML = `<img src="images/workshop/mmu-${n}.jpg" loading="lazy"
-    alt="Touch of Water workshop, MMU Cyberjaya, photo ${i} of ${TOTAL}">`
+  fig.innerHTML = `<img src="${ITEMS[i]}" loading="lazy"
+    alt="Touch of Water workshop, MMU Cyberjaya, photo ${i} of ${ITEMS.length - 1}">`
   fig.addEventListener('click', () => openLightbox(i))
   grid.appendChild(fig)
 }
@@ -146,7 +181,7 @@ for (let i = 1; i <= TOTAL; i++) {
 const lightbox = document.getElementById('lightbox')
 const lbImg = lightbox.querySelector('img')
 const lbCounter = lightbox.querySelector('.counter')
-let current = 1
+let current = 0
 
 function openLightbox(i) {
   current = i
@@ -154,12 +189,13 @@ function openLightbox(i) {
   lightbox.classList.add('open')
 }
 function render() {
-  const n = String(current).padStart(2, '0')
-  lbImg.src = `images/workshop/mmu-${n}.jpg`
-  lbCounter.textContent = `${current} / ${TOTAL}`
+  lbImg.src = ITEMS[current]
+  lbCounter.textContent = current === 0
+    ? 'Poster'
+    : `${current} / ${ITEMS.length - 1}`
 }
 function step(d) {
-  current = ((current - 1 + d + TOTAL) % TOTAL) + 1
+  current = (current + d + ITEMS.length) % ITEMS.length
   render()
 }
 
