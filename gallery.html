@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Touch of Water · Workshop Documentation</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+    }
+
+    header {
+      padding: 2.2rem 2rem 1.6rem;
+    }
+    header h1 {
+      font-size: 1.6rem; letter-spacing: 0.22em; font-weight: 400;
+    }
+    header .sub {
+      font-size: 0.85rem; letter-spacing: 0.22em;
+      color: rgba(255,255,255,0.32); text-transform: uppercase;
+      margin-top: 0.5rem; line-height: 2;
+    }
+    header a.back {
+      display: inline-block; margin-top: 1rem;
+      padding: 0.45rem 0.9rem;
+      border: 1px solid rgba(255,255,255,0.22);
+      color: #fff; text-decoration: none;
+      font-size: 0.8rem; letter-spacing: 0.22em; text-transform: uppercase;
+      transition: border-color 0.2s;
+    }
+    header a.back:hover { border-color: rgba(255,255,255,0.6); }
+
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 6px;
+      padding: 0.5rem 2rem 2rem;
+    }
+    #grid figure {
+      position: relative; overflow: hidden;
+      aspect-ratio: 16 / 10;
+      background: #0a0a0e;
+      cursor: pointer;
+    }
+    #grid img {
+      width: 100%; height: 100%; object-fit: cover;
+      display: block;
+      filter: saturate(0.92);
+      transition: transform 0.35s ease, filter 0.35s ease;
+    }
+    #grid figure:hover img {
+      transform: scale(1.04);
+      filter: saturate(1);
+    }
+
+    footer {
+      padding: 1.5rem 2rem 2.2rem;
+    }
+    footer .credits {
+      font-size: 0.78rem; letter-spacing: 0.18em;
+      color: rgba(255,255,255,0.25); text-transform: uppercase; line-height: 2.4;
+    }
+
+    /* Lightbox */
+    #lightbox {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.96);
+      display: none;
+      align-items: center; justify-content: center;
+      flex-direction: column;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img {
+      max-width: 94vw; max-height: 86vh;
+      object-fit: contain;
+    }
+    #lightbox .counter {
+      margin-top: 1rem;
+      font-size: 0.85rem; letter-spacing: 0.25em;
+      color: rgba(255,255,255,0.4);
+    }
+    #lightbox .close {
+      position: fixed; top: 1rem; right: 1.4rem;
+      font-size: 2rem; color: rgba(255,255,255,0.5);
+      cursor: pointer; background: none; border: none;
+      font-family: 'Courier New', monospace;
+    }
+    #lightbox .nav {
+      position: fixed; top: 50%; transform: translateY(-50%);
+      font-size: 2.2rem; color: rgba(255,255,255,0.4);
+      cursor: pointer; background: none; border: none;
+      font-family: 'Courier New', monospace;
+      padding: 1rem;
+    }
+    #lightbox .nav:hover, #lightbox .close:hover { color: #fff; }
+    #lightbox .prev { left: 0.6rem; }
+    #lightbox .next { right: 0.6rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Touch of Water</h1>
+  <div class="sub">
+    Workshop Documentation<br>
+    MMU · Cyberjaya · 24 June 2026
+  </div>
+  <a class="back" href="index.html">← Map</a>
+</header>
+
+<div id="grid"></div>
+
+<footer>
+  <div class="credits">
+    AR: Bin Youn · Digital Media, RMIT University Vietnam<br>
+    Sound Journal: Van Luber Parensen &amp; Dyah Nindyasari · Sigisora, Jakarta, Indonesia<br>
+    Workshop Coordinator: Prof. Suk-Jun Kim · University of Aberdeen
+  </div>
+</footer>
+
+<div id="lightbox">
+  <button class="close" aria-label="Close">×</button>
+  <button class="nav prev" aria-label="Previous">‹</button>
+  <img alt="Workshop photo enlarged">
+  <button class="nav next" aria-label="Next">›</button>
+  <div class="counter"></div>
+</div>
+
+<script>
+const TOTAL = 22
+const grid = document.getElementById('grid')
+
+for (let i = 1; i <= TOTAL; i++) {
+  const n = String(i).padStart(2, '0')
+  const fig = document.createElement('figure')
+  fig.innerHTML = `<img src="images/workshop/mmu-${n}.jpg" loading="lazy"
+    alt="Touch of Water workshop, MMU Cyberjaya, photo ${i} of ${TOTAL}">`
+  fig.addEventListener('click', () => openLightbox(i))
+  grid.appendChild(fig)
+}
+
+const lightbox = document.getElementById('lightbox')
+const lbImg = lightbox.querySelector('img')
+const lbCounter = lightbox.querySelector('.counter')
+let current = 1
+
+function openLightbox(i) {
+  current = i
+  render()
+  lightbox.classList.add('open')
+}
+function render() {
+  const n = String(current).padStart(2, '0')
+  lbImg.src = `images/workshop/mmu-${n}.jpg`
+  lbCounter.textContent = `${current} / ${TOTAL}`
+}
+function step(d) {
+  current = ((current - 1 + d + TOTAL) % TOTAL) + 1
+  render()
+}
+
+lightbox.querySelector('.close').addEventListener('click', () => lightbox.classList.remove('open'))
+lightbox.querySelector('.prev').addEventListener('click', e => { e.stopPropagation(); step(-1) })
+lightbox.querySelector('.next').addEventListener('click', e => { e.stopPropagation(); step(1) })
+lightbox.addEventListener('click', e => { if (e.target === lightbox) lightbox.classList.remove('open') })
+
+document.addEventListener('keydown', e => {
+  if (!lightbox.classList.contains('open')) return
+  if (e.key === 'Escape') lightbox.classList.remove('open')
+  if (e.key === 'ArrowLeft') step(-1)
+  if (e.key === 'ArrowRight') step(1)
+})
+</script>
+</body>
+</html>
