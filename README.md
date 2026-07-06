@@ -21,15 +21,16 @@ Water here is not a metaphor. It is the material, the method, and the memory.
 
 ## People
 
-**Workshop Coordinator**
-Prof. Suk-Jun Kim — Composer, Sound Artist, Researcher · University of Aberdeen, Scotland
+**Project Lead**
+Bin Youn · Multimedia Artist, Educator, Researcher · Associate Lecturer, Digital Media · RMIT University Vietnam
 
-**AR — Educator & Curator**
-Bin Youn — Multimedia Artist, Educator, Researcher · Associate Lecturer, Digital Media · RMIT University Vietnam
+Collaborating facilitators vary by edition and are credited within each edition's pages.
 
-**Sound Journal — Educators & Curators**
-Van Luber Parensen — Artist, Filmmaker · Sigisora & Forum Lenteng, Jakarta, Indonesia
-Dyah Nindyasari — Researcher · Sigisora, Jakarta, Indonesia
+**MMU Cyberjaya 2026 Edition**
+Workshop Coordinator: Prof. Suk-Jun Kim · Composer, Sound Artist, Researcher · University of Aberdeen, Scotland
+AR: Bin Youn
+Sound Journal: Van Luber Parensen · Artist, Filmmaker · Sigisora & Forum Lenteng, Jakarta, Indonesia
+Sound Journal: Dyah Nindyasari · Researcher · Sigisora, Jakarta, Indonesia
 
 ---
 
