@@ -1,0 +1,13 @@
+{
+  "name": "Touch of Water",
+  "short_name": "Touch of Water",
+  "description": "Memory-Mapping with AR and Sound Journal · MMU Cyberjaya 2026",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#05050a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

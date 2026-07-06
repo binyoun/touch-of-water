@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Touch of Water · MMU 2026</title>
+  <link rel="icon" href="favicon.ico" sizes="48x48">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#05050a">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -154,8 +160,14 @@ L.tileLayer(
 fetch('./teams.json')
   .then(r => { if (!r.ok) throw new Error(r.status); return r.json() })
   .then(teams => {
-    // Polyline connecting all 6 dots in order
     const coords = teams.map(t => [t.lat, t.lng])
+
+    // Center on the midpoint of all team locations
+    const mid = [
+      coords.reduce((s, c) => s + c[0], 0) / coords.length,
+      coords.reduce((s, c) => s + c[1], 0) / coords.length
+    ]
+    map.setView(mid, 17)
     L.polyline(coords, {
       color: 'rgba(255,255,255,0.16)',
       weight: 1,
