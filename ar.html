@@ -202,9 +202,14 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 
 // ── Team config ───────────────────────────────────────────────
 const params  = new URLSearchParams(location.search)
+const rawEd   = params.get('edition')
+const edition = /^[a-z0-9-]+$/i.test(rawEd ?? '') ? rawEd : 'mmu-2026'
+const base    = `editions/${edition}/`
 const teamIdx = parseInt(params.get('team') ?? '5')
-const teams   = await fetch('./teams.json').then(r => r.json())
+const teams   = await fetch(base + 'teams.json').then(r => r.json())
 const team    = teams[Math.min(teamIdx, teams.length - 1)]
+
+document.getElementById('back').href = `map.html?edition=${edition}`
 
 // ── Populate intro ────────────────────────────────────────────
 document.title = `Touch of Water · ${team.name}`
@@ -258,7 +263,7 @@ loader.setDRACOLoader(draco)
 loader.setMeshoptDecoder(MeshoptDecoder)
 
 loader.load(
-  team.model,
+  base + team.model,
   gltf => {
     const model = gltf.scene
     model.traverse(n => {
@@ -287,7 +292,7 @@ let sound = null
 
 function initAudio() {
   sound = new Howl({
-    src:     [team.sound],
+    src:     [base + team.sound],
     loop:    true,
     volume:  0.28,
     html5:   false,

@@ -1,0 +1,21 @@
+[
+  {
+    "id": "mmu-2026",
+    "name": "MMU Cyberjaya",
+    "venue": "ReCollab FCM · Multimedia University",
+    "city": "Cyberjaya",
+    "country": "Malaysia",
+    "date": "24 June 2026",
+    "lat": 2.9262,
+    "lng": 101.6427,
+    "sub": "MMU · Cyberjaya · 24 June 2026",
+    "credits": [
+      "AR: Bin Youn · Digital Media, RMIT University Vietnam",
+      "Sound Journal: Van Luber Parensen & Dyah Nindyasari · Sigisora, Jakarta, Indonesia",
+      "Workshop Coordinator: Prof. Suk-Jun Kim · University of Aberdeen"
+    ],
+    "gallery": { "count": 22, "prefix": "mmu-" },
+    "poster": true,
+    "brief": "docs/workshop-brief.pdf"
+  }
+]

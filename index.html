@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Touch of Water · MMU 2026</title>
+  <title>Touch of Water</title>
   <link rel="icon" href="favicon.ico" sizes="48x48">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
@@ -24,7 +24,7 @@
     #map { position: fixed; inset: 0; }
 
     /* Darken + desaturate satellite tiles */
-    .leaflet-tile-pane { filter: brightness(0.48) saturate(0.65); }
+    .leaflet-tile-pane { filter: brightness(0.42) saturate(0.55); }
     .leaflet-control-attribution { display: none; }
 
     /* Header */
@@ -68,7 +68,7 @@
     .leaflet-popup-content {
       margin: 0 !important;
       padding: 1.2rem 1.5rem 1.3rem !important;
-      min-width: 190px;
+      min-width: 210px;
     }
     .leaflet-popup-tip-container { display: none; }
     .leaflet-popup-close-button {
@@ -77,16 +77,13 @@
       font-size: 2rem !important;
     }
 
-    .p-label  { font-size: 1rem; letter-spacing: 0.25em; opacity: 0.3; text-transform: uppercase; }
-    .p-name   { font-size: 2rem; letter-spacing: 0.1em; margin: 0.35rem 0 0.25rem; }
-    .p-members { font-size: 0.9rem; letter-spacing: 0.1em; opacity: 0.5; margin-bottom: 0.5rem; line-height: 1.8; }
-    .p-gps    { font-size: 1.2rem; letter-spacing: 0.08em; opacity: 0.38; margin-bottom: 0.8rem; }
-    .p-text-en     { font-size: 1.44rem; line-height: 1.65; }
-    .p-text-native { font-size: 1.36rem; line-height: 1.65; opacity: 0.42; margin-top: 0.25rem; }
-    .p-pending { font-size: 1.1rem; opacity: 0.28; text-transform: uppercase; letter-spacing: 0.2em; margin: 0.5rem 0; }
+    .p-label { font-size: 1rem; letter-spacing: 0.25em; opacity: 0.3; text-transform: uppercase; }
+    .p-name  { font-size: 1.8rem; letter-spacing: 0.1em; margin: 0.35rem 0 0.25rem; }
+    .p-venue { font-size: 1.05rem; letter-spacing: 0.08em; opacity: 0.5; line-height: 1.7; }
+    .p-date  { font-size: 1.05rem; letter-spacing: 0.08em; opacity: 0.38; margin: 0.3rem 0 0.6rem; }
 
     .p-btn {
-      display: block; margin-top: 1rem;
+      display: block; margin-top: 0.8rem;
       padding: 0.55rem 1rem;
       border: 1px solid rgba(255,255,255,0.22);
       background: transparent; color: #fff;
@@ -97,28 +94,30 @@
     }
     .p-btn:hover { border-color: rgba(255,255,255,0.6); }
 
-    /* Dot markers */
+    /* Edition ripple markers */
     .dot-wrap { display: flex; align-items: center; justify-content: center; }
-    .dot-inner {
-      border-radius: 50%; border-style: solid;
+    .ripple {
+      position: relative;
       display: flex; align-items: center; justify-content: center;
-      font-family: 'Courier New', monospace; cursor: pointer;
-      transition: transform 0.15s ease;
-      background: rgba(0,0,0,0.55);
+      cursor: pointer;
     }
-    .dot-inner:hover { transform: scale(1.3); }
-
-    /* Gallery link */
-    #gallery-link {
-      position: fixed; top: 2rem; right: 2rem; z-index: 1100;
-      padding: 0.55rem 1rem;
-      border: 1px solid rgba(255,255,255,0.22);
-      background: rgba(0,0,0,0.55); color: #fff;
-      font-size: 0.85rem; letter-spacing: 0.22em; text-transform: uppercase;
-      text-decoration: none;
-      transition: border-color 0.2s;
+    .ripple .core {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: #cfe8ff;
+      box-shadow: 0 0 10px 3px rgba(116,192,252,0.7);
+      z-index: 2;
     }
-    #gallery-link:hover { border-color: rgba(255,255,255,0.6); }
+    .ripple .ring {
+      position: absolute; inset: 0;
+      border: 1.5px solid #74c0fc; border-radius: 50%;
+      animation: ripple 2.8s ease-out infinite;
+      opacity: 0;
+    }
+    .ripple .ring:nth-child(2) { animation-delay: 1.4s; }
+    @keyframes ripple {
+      0%   { transform: scale(0.3); opacity: 0.9; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
   </style>
 </head>
 <body>
@@ -127,11 +126,9 @@
   <h1>Touch of Water</h1>
   <div class="sub">
     Memory-Mapping with AR and Sound Journal<br>
-    MMU · Cyberjaya · 24 June 2026
+    Workshop Editions
   </div>
 </div>
-
-<a id="gallery-link" href="gallery.html">Documentation</a>
 
 <div id="map"></div>
 
@@ -146,10 +143,12 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const map = L.map('map', {
-  center: [2.9252, 101.6401],
-  zoom: 17,
+  center: [10, 105],
+  zoom: 4,
+  minZoom: 2,
   zoomControl: false,
-  attributionControl: false
+  attributionControl: false,
+  worldCopyJump: true
 })
 
 L.tileLayer(
@@ -157,81 +156,46 @@ L.tileLayer(
   { maxZoom: 20 }
 ).addTo(map)
 
-fetch('./teams.json')
+fetch('./editions.json')
   .then(r => { if (!r.ok) throw new Error(r.status); return r.json() })
-  .then(teams => {
-    const coords = teams.map(t => [t.lat, t.lng])
+  .then(editions => {
+    if (editions.length === 1) {
+      map.setView([editions[0].lat, editions[0].lng], 5)
+    } else if (editions.length > 1) {
+      map.fitBounds(editions.map(e => [e.lat, e.lng]), {
+        padding: [90, 90], maxZoom: 6
+      })
+    }
 
-    // Center on the midpoint of all team locations
-    const mid = [
-      coords.reduce((s, c) => s + c[0], 0) / coords.length,
-      coords.reduce((s, c) => s + c[1], 0) / coords.length
-    ]
-    map.setView(mid, 17)
-    L.polyline(coords, {
-      color: 'rgba(255,255,255,0.16)',
-      weight: 1,
-      dashArray: '3, 8'
-    }).addTo(map)
-
-    teams.forEach(team => {
-      const isDemo    = team.id === 6
-      const isPending = team.placeholder
-
-      const TEAM_COLORS = {
-        1: '#ff6b6b',
-        2: '#69db7c',
-        3: '#ffd43b',
-        4: '#cc5de8',
-        5: '#74c0fc',
-        6: '#ffffff',
-      }
-      const baseColor = TEAM_COLORS[team.id] ?? '#ffffff'
-      const color     = isPending ? 'rgba(255,255,255,0.45)' : baseColor
-      const glow      = isPending ? '' : `box-shadow:0 0 8px 2px ${baseColor}88;`
-      const size      = isDemo ? 22 : 18
-      const label     = isDemo ? '◎' : team.id
-      const border    = isPending ? '1px dashed' : '2px solid'
-
+    editions.forEach((ed, i) => {
       const icon = L.divIcon({
         className: 'dot-wrap',
-        iconSize:   [size + 14, size + 14],
-        iconAnchor: [(size + 14) / 2, (size + 14) / 2],
-        html: `<div class="dot-inner" style="
-          width:${size}px; height:${size}px;
-          border:${border} ${color};
-          color:${color};
-          font-size:${Math.floor(size * 0.75)}px;
-          font-weight:600;
-          ${glow}
-        ">${label}</div>`
+        iconSize:   [44, 44],
+        iconAnchor: [22, 22],
+        html: `<div class="ripple" style="width:44px;height:44px">
+          <span class="ring"></span><span class="ring"></span>
+          <span class="core"></span>
+        </div>`
       })
 
-      let html = `<div class="p-label">${isDemo ? 'Demo' : 'Team ' + team.id}</div>`
-      html    += `<div class="p-name">${team.name}</div>`
-      if (team.members) {
-        html += `<div class="p-members">${team.members}</div>`
-      }
+      const num = String(i + 1).padStart(2, '0')
+      const html = `
+        <div class="p-label">Edition ${num} · ${ed.country}</div>
+        <div class="p-name">${ed.name}</div>
+        <div class="p-venue">${ed.venue}</div>
+        <div class="p-date">${ed.date}</div>
+        <a class="p-btn" href="map.html?edition=${ed.id}">Team Map →</a>
+        <a class="p-btn" href="gallery.html?edition=${ed.id}">Documentation</a>`
 
-      if (team.lat && team.lng) {
-        html += `<div class="p-gps">${team.lat.toFixed(5)},&nbsp;${team.lng.toFixed(5)}</div>`
-      }
-
-      if (isPending && !isDemo) {
-        html += `<div class="p-pending">GPS pending</div>`
-      }
-
-      html += `<a class="p-btn" href="ar.html?team=${team.id - 1}">Enter AR →</a>`
-
-      L.marker([team.lat, team.lng], { icon })
-        .bindPopup(html, { maxWidth: 260 })
+      L.marker([ed.lat, ed.lng], { icon })
+        .bindPopup(html, { maxWidth: 280 })
         .addTo(map)
     })
   })
   .catch(err => {
-    console.error('teams.json failed:', err)
+    console.error('editions.json failed:', err)
     document.body.insertAdjacentHTML('beforeend',
-      `<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#f66;font-family:monospace;font-size:1rem;z-index:9999">Could not load teams.json: ${err.message}</div>`)
+      `<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#f66;font-family:monospace;font-size:1rem;z-index:9999">Could not load editions.json: ${err.message}</div>`)
   })
 </script>
 </body>

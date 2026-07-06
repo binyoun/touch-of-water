@@ -132,30 +132,24 @@
 
 <header>
   <h1>Touch of Water</h1>
-  <div class="sub">
-    Workshop Documentation<br>
-    MMU · Cyberjaya · 24 June 2026
+  <div class="sub" id="sub">
+    Workshop Documentation
   </div>
-  <a class="back" href="index.html">← Map</a>
-  <a class="brief" href="docs/workshop-brief.pdf" target="_blank" rel="noopener">Workshop Brief (PDF)</a>
+  <a class="back" id="back-link" href="map.html">← Map</a>
+  <a class="brief" id="brief-link" href="#" target="_blank" rel="noopener" style="display:none">Workshop Brief (PDF)</a>
 </header>
 
-<div id="poster">
+<div id="poster" style="display:none">
   <figure id="poster-fig">
-    <img src="images/workshop/poster.jpg"
-      alt="Touch of Water workshop poster, Faculty of Creative Multimedia, MMU, 24 June 2026">
+    <img id="poster-img" alt="Touch of Water workshop poster">
   </figure>
-  <div class="caption">Workshop Poster · ReCollab FCM</div>
+  <div class="caption" id="poster-caption">Workshop Poster</div>
 </div>
 
 <div id="grid"></div>
 
 <footer>
-  <div class="credits">
-    AR: Bin Youn · Digital Media, RMIT University Vietnam<br>
-    Sound Journal: Van Luber Parensen &amp; Dyah Nindyasari · Sigisora, Jakarta, Indonesia<br>
-    Workshop Coordinator: Prof. Suk-Jun Kim · University of Aberdeen
-  </div>
+  <div class="credits" id="credits"></div>
 </footer>
 
 <div id="lightbox">
@@ -166,20 +160,56 @@
   <div class="counter"></div>
 </div>
 
-<script>
-const ITEMS = ['images/workshop/poster.jpg']
-for (let i = 1; i <= 22; i++) {
-  ITEMS.push(`images/workshop/mmu-${String(i).padStart(2, '0')}.jpg`)
+<script type="module">
+const rawEdition = new URLSearchParams(location.search).get('edition')
+const requested  = /^[a-z0-9-]+$/i.test(rawEdition ?? '') ? rawEdition : null
+
+const ITEMS = []
+let hasPoster = false
+
+const editions = await fetch('./editions.json').then(r => {
+  if (!r.ok) throw new Error(r.status); return r.json()
+})
+const edition = editions.find(e => e.id === requested) ?? editions[0]
+const base    = `editions/${edition.id}/`
+
+document.title = `Touch of Water · ${edition.name} · Documentation`
+document.getElementById('sub').innerHTML = `Workshop Documentation<br>${edition.sub}`
+document.getElementById('credits').innerHTML = edition.credits.join('<br>')
+document.getElementById('back-link').href = `map.html?edition=${edition.id}`
+
+if (edition.brief) {
+  const brief = document.getElementById('brief-link')
+  brief.href = base + edition.brief
+  brief.style.display = 'inline-block'
+}
+
+if (edition.poster) {
+  hasPoster = true
+  ITEMS.push(`${base}images/workshop/poster.jpg`)
+  const posterImg = document.getElementById('poster-img')
+  posterImg.src = ITEMS[0]
+  posterImg.alt = `Touch of Water workshop poster, ${edition.name}, ${edition.date}`
+  document.getElementById('poster-caption').textContent =
+    `Workshop Poster · ${edition.venue}`
+  document.getElementById('poster').style.display = 'block'
+  document.getElementById('poster-fig').addEventListener('click', () => openLightbox(0))
+}
+
+const photoCount = edition.gallery?.count ?? 0
+const prefix     = edition.gallery?.prefix ?? ''
+for (let i = 1; i <= photoCount; i++) {
+  ITEMS.push(`${base}images/workshop/${prefix}${String(i).padStart(2, '0')}.jpg`)
 }
 
 const grid = document.getElementById('grid')
+const firstPhoto = hasPoster ? 1 : 0
 
-document.getElementById('poster-fig').addEventListener('click', () => openLightbox(0))
-
-for (let i = 1; i < ITEMS.length; i++) {
+for (let i = firstPhoto; i < ITEMS.length; i++) {
   const fig = document.createElement('figure')
+  const n = i - firstPhoto + 1
   fig.innerHTML = `<img src="${ITEMS[i]}" loading="lazy"
-    alt="Touch of Water workshop, MMU Cyberjaya, photo ${i} of ${ITEMS.length - 1}">`
+    alt="Touch of Water workshop, ${edition.name}, photo ${n} of ${photoCount}">`
   fig.addEventListener('click', () => openLightbox(i))
   grid.appendChild(fig)
 }
@@ -196,9 +226,9 @@ function openLightbox(i) {
 }
 function render() {
   lbImg.src = ITEMS[current]
-  lbCounter.textContent = current === 0
+  lbCounter.textContent = (hasPoster && current === 0)
     ? 'Poster'
-    : `${current} / ${ITEMS.length - 1}`
+    : `${current - firstPhoto + 1} / ${photoCount}`
 }
 function step(d) {
   current = (current + d + ITEMS.length) % ITEMS.length

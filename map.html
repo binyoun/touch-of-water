@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Touch of Water · MMU 2026</title>
+  <link rel="icon" href="favicon.ico" sizes="48x48">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#05050a">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    }
+
+    #map { position: fixed; inset: 0; }
+
+    /* Darken + desaturate satellite tiles */
+    .leaflet-tile-pane { filter: brightness(0.48) saturate(0.65); }
+    .leaflet-control-attribution { display: none; }
+
+    /* Header */
+    #header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      padding: 1.8rem 2rem 4rem;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    #header h1 {
+      font-size: 2.1rem; letter-spacing: 0.22em; font-weight: 400;
+    }
+    #header .sub {
+      font-size: 1rem; letter-spacing: 0.22em;
+      color: rgba(255,255,255,0.32); text-transform: uppercase;
+      margin-top: 0.5rem; line-height: 2.2;
+    }
+
+    /* Footer */
+    #footer {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
+      padding: 3.5rem 2rem 1.6rem;
+      background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    #footer .credits {
+      font-size: 0.9rem; letter-spacing: 0.18em;
+      color: rgba(255,255,255,0.25); text-transform: uppercase; line-height: 2.4;
+    }
+
+    /* Popup */
+    .leaflet-popup-content-wrapper {
+      background: rgba(4,4,8,0.94) !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      color: #fff !important;
+      font-family: 'Courier New', monospace !important;
+      padding: 0 !important;
+    }
+    .leaflet-popup-content {
+      margin: 0 !important;
+      padding: 1.2rem 1.5rem 1.3rem !important;
+      min-width: 190px;
+    }
+    .leaflet-popup-tip-container { display: none; }
+    .leaflet-popup-close-button {
+      color: rgba(255,255,255,0.35) !important;
+      top: 0.5rem !important; right: 0.6rem !important;
+      font-size: 2rem !important;
+    }
+
+    .p-label  { font-size: 1rem; letter-spacing: 0.25em; opacity: 0.3; text-transform: uppercase; }
+    .p-name   { font-size: 2rem; letter-spacing: 0.1em; margin: 0.35rem 0 0.25rem; }
+    .p-members { font-size: 0.9rem; letter-spacing: 0.1em; opacity: 0.5; margin-bottom: 0.5rem; line-height: 1.8; }
+    .p-gps    { font-size: 1.2rem; letter-spacing: 0.08em; opacity: 0.38; margin-bottom: 0.8rem; }
+    .p-text-en     { font-size: 1.44rem; line-height: 1.65; }
+    .p-text-native { font-size: 1.36rem; line-height: 1.65; opacity: 0.42; margin-top: 0.25rem; }
+    .p-pending { font-size: 1.1rem; opacity: 0.28; text-transform: uppercase; letter-spacing: 0.2em; margin: 0.5rem 0; }
+
+    .p-btn {
+      display: block; margin-top: 1rem;
+      padding: 0.55rem 1rem;
+      border: 1px solid rgba(255,255,255,0.22);
+      background: transparent; color: #fff;
+      font-family: 'Courier New', monospace; font-size: 1.1rem;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      cursor: pointer; text-align: center; text-decoration: none;
+      transition: border-color 0.2s;
+    }
+    .p-btn:hover { border-color: rgba(255,255,255,0.6); }
+
+    /* Dot markers */
+    .dot-wrap { display: flex; align-items: center; justify-content: center; }
+    .dot-inner {
+      border-radius: 50%; border-style: solid;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Courier New', monospace; cursor: pointer;
+      transition: transform 0.15s ease;
+      background: rgba(0,0,0,0.55);
+    }
+    .dot-inner:hover { transform: scale(1.3); }
+
+    /* Top-right nav */
+    #nav {
+      position: fixed; top: 2rem; right: 2rem; z-index: 1100;
+      display: flex; gap: 0.6rem;
+    }
+    #nav a {
+      padding: 0.55rem 1rem;
+      border: 1px solid rgba(255,255,255,0.22);
+      background: rgba(0,0,0,0.55); color: #fff;
+      font-size: 0.85rem; letter-spacing: 0.22em; text-transform: uppercase;
+      text-decoration: none;
+      transition: border-color 0.2s;
+    }
+    #nav a:hover { border-color: rgba(255,255,255,0.6); }
+  </style>
+</head>
+<body>
+
+<div id="header">
+  <h1>Touch of Water</h1>
+  <div class="sub" id="sub">
+    Memory-Mapping with AR and Sound Journal
+  </div>
+</div>
+
+<div id="nav">
+  <a id="world-link" href="index.html">← World</a>
+  <a id="gallery-link" href="gallery.html">Documentation</a>
+</div>
+
+<div id="map"></div>
+
+<div id="footer">
+  <div class="credits" id="credits"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map = L.map('map', {
+  center: [2.9252, 101.6401],
+  zoom: 17,
+  zoomControl: false,
+  attributionControl: false
+})
+
+L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  { maxZoom: 20 }
+).addTo(map)
+
+const rawEdition = new URLSearchParams(location.search).get('edition')
+const requested  = /^[a-z0-9-]+$/i.test(rawEdition ?? '') ? rawEdition : null
+
+let edition = null
+
+fetch('./editions.json')
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json() })
+  .then(editions => {
+    edition = editions.find(e => e.id === requested) ?? editions[0]
+
+    document.title = `Touch of Water · ${edition.name}`
+    document.getElementById('sub').innerHTML =
+      `Memory-Mapping with AR and Sound Journal<br>${edition.sub}`
+    document.getElementById('credits').innerHTML = edition.credits.join('<br>')
+    document.getElementById('gallery-link').href = `gallery.html?edition=${edition.id}`
+
+    return fetch(`editions/${edition.id}/teams.json`)
+  })
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json() })
+  .then(teams => {
+    const coords = teams.map(t => [t.lat, t.lng])
+
+    // Center on the midpoint of all team locations
+    const mid = [
+      coords.reduce((s, c) => s + c[0], 0) / coords.length,
+      coords.reduce((s, c) => s + c[1], 0) / coords.length
+    ]
+    map.setView(mid, 17)
+    L.polyline(coords, {
+      color: 'rgba(255,255,255,0.16)',
+      weight: 1,
+      dashArray: '3, 8'
+    }).addTo(map)
+
+    teams.forEach(team => {
+      const isDemo    = team.id === 6
+      const isPending = team.placeholder
+
+      const TEAM_COLORS = {
+        1: '#ff6b6b',
+        2: '#69db7c',
+        3: '#ffd43b',
+        4: '#cc5de8',
+        5: '#74c0fc',
+        6: '#ffffff',
+      }
+      const baseColor = TEAM_COLORS[team.id] ?? '#ffffff'
+      const color     = isPending ? 'rgba(255,255,255,0.45)' : baseColor
+      const glow      = isPending ? '' : `box-shadow:0 0 8px 2px ${baseColor}88;`
+      const size      = isDemo ? 22 : 18
+      const label     = isDemo ? '◎' : team.id
+      const border    = isPending ? '1px dashed' : '2px solid'
+
+      const icon = L.divIcon({
+        className: 'dot-wrap',
+        iconSize:   [size + 14, size + 14],
+        iconAnchor: [(size + 14) / 2, (size + 14) / 2],
+        html: `<div class="dot-inner" style="
+          width:${size}px; height:${size}px;
+          border:${border} ${color};
+          color:${color};
+          font-size:${Math.floor(size * 0.75)}px;
+          font-weight:600;
+          ${glow}
+        ">${label}</div>`
+      })
+
+      let html = `<div class="p-label">${isDemo ? 'Demo' : 'Team ' + team.id}</div>`
+      html    += `<div class="p-name">${team.name}</div>`
+      if (team.members) {
+        html += `<div class="p-members">${team.members}</div>`
+      }
+
+      if (team.lat && team.lng) {
+        html += `<div class="p-gps">${team.lat.toFixed(5)},&nbsp;${team.lng.toFixed(5)}</div>`
+      }
+
+      if (isPending && !isDemo) {
+        html += `<div class="p-pending">GPS pending</div>`
+      }
+
+      html += `<a class="p-btn" href="ar.html?edition=${edition.id}&team=${team.id - 1}">Enter AR →</a>`
+
+      L.marker([team.lat, team.lng], { icon })
+        .bindPopup(html, { maxWidth: 260 })
+        .addTo(map)
+    })
+  })
+  .catch(err => {
+    console.error('edition data failed:', err)
+    document.body.insertAdjacentHTML('beforeend',
+      `<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#f66;font-family:monospace;font-size:1rem;z-index:9999">Could not load edition data: ${err.message}</div>`)
+  })
+</script>
+</body>
+</html>

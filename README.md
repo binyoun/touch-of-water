@@ -91,24 +91,30 @@ The workshop produces a shared WebAR map. Each team claims a location on the MMU
 
 ## Project Structure
 
+The site is multi-edition: each workshop run lives in its own folder under `editions/`, and the shared pages read `?edition=<id>` from the URL (defaulting to the first edition).
+
 ```
 touch-of-water/
-├── index.html          # Landing map
-├── ar.html             # AR experience (loads team config from URL param)
-├── teams.json          # All team data: GPS, text, asset paths
-└── teams/
-    ├── demo/
-    │   ├── model.glb
-    │   └── sound.mp3
-    ├── team1/
-    │   ├── model.glb
-    │   └── sound.mp3
-    ├── team2/
-    ├── team3/
-    └── team4/
+├── index.html          # World map of workshop editions
+├── map.html            # Team map for one edition (?edition=)
+├── ar.html             # AR experience (?edition= & ?team=)
+├── gallery.html        # Workshop documentation (?edition=)
+├── editions.json       # Edition registry: name, venue, GPS, credits, gallery config
+└── editions/
+    └── mmu-2026/
+        ├── teams.json  # Team data: GPS, text, asset paths (relative to this folder)
+        ├── teams/
+        │   ├── team1/
+        │   │   ├── model.glb
+        │   │   └── sound.mp3
+        │   ├── team2/ ...
+        ├── images/workshop/   # Poster + documentation photos
+        └── docs/              # Workshop brief PDF
 ```
 
-`teams.json` is the single file that connects everything. Each entry:
+To add a new edition: copy the `mmu-2026` folder shape, fill in its `teams.json`, and add one entry to `editions.json`. No code changes needed.
+
+`teams.json` connects everything within an edition. Each entry:
 
 ```json
 {
