@@ -118,6 +118,17 @@
       0%   { transform: scale(0.3); opacity: 0.9; }
       100% { transform: scale(1.6); opacity: 0; }
     }
+
+    /* Upcoming editions: dimmed, dashed, no glow */
+    .ripple.upcoming .core {
+      background: rgba(255,255,255,0.45);
+      box-shadow: none;
+    }
+    .ripple.upcoming .ring {
+      border-style: dashed;
+      border-color: rgba(255,255,255,0.35);
+      animation-duration: 4.5s;
+    }
   </style>
 </head>
 <body>
@@ -167,24 +178,29 @@ fetch('./editions.json')
     }
 
     editions.forEach((ed, i) => {
+      const upcoming = ed.status === 'upcoming'
+
       const icon = L.divIcon({
         className: 'dot-wrap',
         iconSize:   [44, 44],
         iconAnchor: [22, 22],
-        html: `<div class="ripple" style="width:44px;height:44px">
+        html: `<div class="ripple${upcoming ? ' upcoming' : ''}" style="width:44px;height:44px">
           <span class="ring"></span><span class="ring"></span>
           <span class="core"></span>
         </div>`
       })
 
       const num = String(i + 1).padStart(2, '0')
-      const html = `
-        <div class="p-label">Edition ${num} · ${ed.country}</div>
+      const hasDocs = ed.poster || (ed.gallery?.count > 0)
+      let html = `
+        <div class="p-label">Edition ${num} · ${ed.country}${upcoming ? ' · Upcoming' : ''}</div>
         <div class="p-name">${ed.name}</div>
         <div class="p-venue">${ed.venue}</div>
         <div class="p-date">${ed.date}</div>
-        <a class="p-btn" href="map.html?edition=${ed.id}">Team Map →</a>
-        <a class="p-btn" href="gallery.html?edition=${ed.id}">Documentation</a>`
+        <a class="p-btn" href="map.html?edition=${ed.id}">Team Map →</a>`
+      if (hasDocs) {
+        html += `<a class="p-btn" href="gallery.html?edition=${ed.id}">Documentation</a>`
+      }
 
       L.marker([ed.lat, ed.lng], { icon })
         .bindPopup(html, { maxWidth: 280 })

@@ -172,7 +172,12 @@ fetch('./editions.json')
     document.getElementById('sub').innerHTML =
       `Memory-Mapping with AR and Sound Journal<br>${edition.sub}`
     document.getElementById('credits').innerHTML = edition.credits.join('<br>')
-    document.getElementById('gallery-link').href = `gallery.html?edition=${edition.id}`
+    const galleryLink = document.getElementById('gallery-link')
+    if (edition.poster || edition.gallery?.count > 0) {
+      galleryLink.href = `gallery.html?edition=${edition.id}`
+    } else {
+      galleryLink.style.display = 'none'
+    }
 
     return fetch(`editions/${edition.id}/teams.json`)
   })

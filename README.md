@@ -102,16 +102,19 @@ touch-of-water/
 ├── gallery.html        # Workshop documentation (?edition=)
 ├── editions.json       # Edition registry: name, venue, GPS, credits, gallery config
 └── editions/
-    └── mmu-2026/
-        ├── teams.json  # Team data: GPS, text, asset paths (relative to this folder)
-        ├── teams/
-        │   ├── team1/
-        │   │   ├── model.glb
-        │   │   └── sound.mp3
-        │   ├── team2/ ...
-        ├── images/workshop/   # Poster + documentation photos
-        └── docs/              # Workshop brief PDF
+    ├── mmu-2026/
+    │   ├── teams.json  # Team data: GPS, text, asset paths (relative to this folder)
+    │   ├── teams/
+    │   │   ├── team1/
+    │   │   │   ├── model.glb
+    │   │   │   └── sound.mp3
+    │   │   ├── team2/ ...
+    │   ├── images/workshop/   # Poster + documentation photos
+    │   └── docs/              # Workshop brief PDF
+    └── hcmc-2026/             # Upcoming edition: placeholder teams.json only
 ```
+
+Editions with `"status": "upcoming"` in `editions.json` get a dimmed dashed marker on the world map and no Documentation link until photos or a poster exist.
 
 To add a new edition: copy the `mmu-2026` folder shape, fill in its `teams.json`, and add one entry to `editions.json`. No code changes needed.
 

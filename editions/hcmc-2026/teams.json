@@ -1,0 +1,57 @@
+[
+  {
+    "id": 1,
+    "name": "Team 1",
+    "lat": 10.73050, "lng": 106.69300,
+    "model": "teams/team1/model.glb",
+    "sound": "teams/team1/sound.mp3",
+    "textEn": "",
+    "textNative": "",
+    "lang": "",
+    "placeholder": true
+  },
+  {
+    "id": 2,
+    "name": "Team 2",
+    "lat": 10.73000, "lng": 106.69500,
+    "model": "teams/team2/model.glb",
+    "sound": "teams/team2/sound.mp3",
+    "textEn": "",
+    "textNative": "",
+    "lang": "",
+    "placeholder": true
+  },
+  {
+    "id": 3,
+    "name": "Team 3",
+    "lat": 10.72920, "lng": 106.69450,
+    "model": "teams/team3/model.glb",
+    "sound": "teams/team3/sound.mp3",
+    "textEn": "",
+    "textNative": "",
+    "lang": "",
+    "placeholder": true
+  },
+  {
+    "id": 4,
+    "name": "Team 4",
+    "lat": 10.72880, "lng": 106.69320,
+    "model": "teams/team4/model.glb",
+    "sound": "teams/team4/sound.mp3",
+    "textEn": "",
+    "textNative": "",
+    "lang": "",
+    "placeholder": true
+  },
+  {
+    "id": 5,
+    "name": "Team 5",
+    "lat": 10.72960, "lng": 106.69220,
+    "model": "teams/team5/model.glb",
+    "sound": "teams/team5/sound.mp3",
+    "textEn": "",
+    "textNative": "",
+    "lang": "",
+    "placeholder": true
+  }
+]

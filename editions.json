@@ -17,5 +17,23 @@
     "gallery": { "count": 22, "prefix": "mmu-" },
     "poster": true,
     "brief": "docs/workshop-brief.pdf"
+  },
+  {
+    "id": "hcmc-2026",
+    "name": "RMIT Saigon South",
+    "venue": "RMIT University Vietnam · Saigon South Campus",
+    "city": "Ho Chi Minh City",
+    "country": "Vietnam",
+    "date": "Semester 2, 2026 · TBC",
+    "lat": 10.7297,
+    "lng": 106.6939,
+    "sub": "RMIT Vietnam · Ho Chi Minh City · S2 2026",
+    "status": "upcoming",
+    "credits": [
+      "Project Lead / AR: Bin Youn · Digital Media, RMIT University Vietnam",
+      "Facilitation team to be confirmed"
+    ],
+    "gallery": { "count": 0, "prefix": "" },
+    "poster": false
   }
 ]
