@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Touch of Water · Water Atlas</title>
+  <meta name="description" content="Send a photo of a water you remember and the place it comes from. Each one becomes a point on the Touch of Water map.">
+  <link rel="icon" href="favicon.ico" sizes="48x48">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#05050a">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    /* One form in five steps, read on a phone after scanning a QR code: photo, place, words,
+       how it is shown, consent. Then the waters shared so far, as dots on the satellite map. */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      line-height: 1.6;
+      padding: 2.4rem max(16px, env(safe-area-inset-left)) 4rem max(16px, env(safe-area-inset-right));
+    }
+    a { color: inherit; text-underline-offset: 3px; }
+    :focus-visible { outline: 1px solid #fff; outline-offset: 3px; }
+
+    .wrap { max-width: 680px; margin: 0 auto; display: grid; gap: 2.6rem; }
+
+    header h1 { font-size: 2.1rem; letter-spacing: 0.22em; font-weight: 400; }
+    header .sub {
+      font-size: 0.85rem; letter-spacing: 0.22em; text-transform: uppercase;
+      color: rgba(255,255,255,0.4); margin-top: 0.4rem; line-height: 2;
+    }
+    header .sub a { text-decoration: none; }
+    .lede { margin-top: 1.2rem; color: rgba(255,255,255,0.82); }
+    .langs { margin-top: 0.6rem; font-size: 0.85rem; color: rgba(255,255,255,0.4); }
+    .test {
+      margin-top: 1rem; font-size: 0.8rem; padding: 0.6rem 0.8rem;
+      border: 1px dashed rgba(255,255,255,0.4); color: rgba(255,255,255,0.7);
+    }
+
+    form { display: grid; gap: 2.6rem; }
+    fieldset { border: 0; display: grid; gap: 0.9rem; min-width: 0; }
+    legend { margin-bottom: 0.4rem; }
+    h2 { font-size: 1.05rem; letter-spacing: 0.22em; font-weight: 400; text-transform: uppercase; }
+    h2 .n { color: rgba(255,255,255,0.35); margin-right: 0.8rem; }
+    .hint, .small { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
+
+    label.field { display: grid; gap: 0.4rem; font-size: 0.85rem; letter-spacing: 0.06em; color: rgba(255,255,255,0.7); }
+    input[type=text], textarea {
+      font: inherit; font-size: 16px; color: #fff; background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.18); border-radius: 0; padding: 0.7rem 0.8rem; width: 100%;
+    }
+    textarea { min-height: 5.5rem; resize: vertical; }
+    input[type=text]:focus, textarea:focus { border-color: rgba(255,255,255,0.6); outline: none; }
+    .count { font-size: 0.75rem; color: rgba(255,255,255,0.35); justify-self: end; }
+    .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+    @media (max-width: 520px) { .pair { grid-template-columns: 1fr; } }
+
+    .drop {
+      position: relative; display: grid; place-items: center; gap: 0.3rem; padding: 2rem 1rem;
+      border: 1px dashed rgba(255,255,255,0.3); cursor: pointer; text-align: center;
+    }
+    .drop:hover, .drop:focus-within { border-color: rgba(255,255,255,0.7); }
+    .drop b { font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; }
+    .drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .preview { display: none; grid-template-columns: 110px 1fr; gap: 1rem; align-items: center; }
+    .preview.on { display: grid; }
+    .preview img { width: 110px; height: 110px; object-fit: cover; border: 1px solid rgba(255,255,255,0.18); }
+    .dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.6); vertical-align: -2px; margin-right: 0.5rem; }
+
+    .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    button {
+      font: inherit; font-size: 0.85rem; letter-spacing: 0.12em; text-transform: uppercase; color: #fff;
+      background: transparent; border: 1px solid rgba(255,255,255,0.3); border-radius: 0; padding: 0.55rem 0.9rem; cursor: pointer;
+    }
+    button:hover { border-color: rgba(255,255,255,0.8); }
+    button.primary { background: #fff; color: #000; border-color: #fff; padding: 0.85rem 1.4rem; font-size: 0.95rem; }
+    button.primary:disabled { opacity: 0.5; cursor: wait; }
+
+    #map { height: 360px; border: 1px solid rgba(255,255,255,0.18); background: #05050a; }
+    .leaflet-tile-pane { filter: brightness(0.62) saturate(0.7); }
+    .leaflet-control-attribution { font-size: 9px; background: rgba(0,0,0,0.6) !important; color: rgba(255,255,255,0.5) !important; }
+    .leaflet-control-attribution a { color: rgba(255,255,255,0.6) !important; }
+    .coords { font-size: 0.8rem; color: rgba(255,255,255,0.45); }
+
+    .choice { display: grid; gap: 0.6rem; }
+    .choice label, .consent label { display: grid; grid-template-columns: 22px 1fr; gap: 0.6rem; align-items: start; cursor: pointer; font-size: 0.95rem; }
+    .choice input, .consent input { width: 16px; height: 16px; margin-top: 0.3rem; accent-color: #fff; }
+    .choice small { display: block; font-size: 0.8rem; color: rgba(255,255,255,0.45); }
+    .consent { display: grid; gap: 0.8rem; padding: 1rem; border: 1px solid rgba(255,255,255,0.18); }
+    .hp { position: absolute; left: -9999px; }
+
+    .status { font-size: 0.9rem; min-height: 1.5em; color: rgba(255,255,255,0.7); }
+    .status.error { color: #f88; }
+    .done { display: none; gap: 1rem; padding: 1.6rem; border: 1px solid rgba(255,255,255,0.3); }
+    .done.on { display: grid; }
+    .done code { letter-spacing: 0.15em; }
+
+    .leaflet-popup-content-wrapper {
+      background: rgba(4,4,8,0.94) !important; border: 1px solid rgba(255,255,255,0.1) !important;
+      border-radius: 0 !important; box-shadow: none !important; color: #fff !important;
+      font-family: 'Courier New', monospace !important;
+    }
+    .leaflet-popup-tip-container { display: none; }
+    .leaflet-popup-content { font-size: 0.85rem; line-height: 1.5; }
+    .leaflet-popup-content img { width: 180px; display: block; margin-bottom: 0.5rem; }
+    .leaflet-popup-content .native { color: rgba(255,255,255,0.55); margin-top: 0.3rem; }
+
+    footer { font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.3); line-height: 2.2; border-top: 1px solid rgba(255,255,255,0.12); padding-top: 1rem; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>WATER ATLAS</h1>
+    <div class="sub"><a href="./">Touch of Water</a> · Jakarta · Kuala Lumpur · Ho Chi Minh City</div>
+    <p class="lede">Send a photo of a water you remember, and the place it comes from: a canal, a well, a tap, rain on a roof, a glass of water left by your bed. Each one becomes a point on the Touch of Water map, joining the memories mapped at MMU.</p>
+    <p class="langs">Atlas Air · Bản đồ nước · 水的地图 · 물의 지도 — write in any language.</p>
+    <p id="test-mode" class="test" hidden>Test mode: the page reads your photo but sends nothing. Set ATLAS_ENDPOINT in atlas.html to open it.</p>
+  </header>
+
+  <form id="atlas" novalidate>
+    <fieldset>
+      <legend><h2><span class="n">01</span>Your photo</h2></legend>
+      <p class="hint">One photo of the water. Please leave out faces and house numbers. The photo is made smaller and the location hidden inside it is removed before it leaves your phone.</p>
+      <label class="drop">
+        <input type="file" id="photo" accept="image/*" required>
+        <b>Choose or take a photo</b>
+        <span class="small">JPEG, PNG or HEIC</span>
+      </label>
+      <div class="preview" id="preview" aria-live="polite">
+        <img id="preview-img" alt="Your photo">
+        <p class="small"><span class="dot" id="swatch"></span>Its colour marks your point on the map.</p>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><h2><span class="n">02</span>The place</h2></legend>
+      <p class="hint">Tap the map where this water is, or use your location. It is rounded to the neighbourhood (about 1 km), never your exact address.</p>
+      <div class="row">
+        <button type="button" data-city="jakarta">Jakarta</button>
+        <button type="button" data-city="kl">Kuala Lumpur</button>
+        <button type="button" data-city="hcmc">Ho Chi Minh City</button>
+        <button type="button" id="locate">Use my location</button>
+      </div>
+      <div id="map" role="application" aria-label="Map: tap to mark where the water is"></div>
+      <span class="coords" id="coords">No place marked yet</span>
+      <label class="field">Place name (optional)
+        <input type="text" id="place" maxlength="80" placeholder="e.g. Sungai Klang, Kampung Baru">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend><h2><span class="n">03</span>A memory</h2></legend>
+      <label class="field">One or two sentences: a memory, an observation or a question about this water
+        <textarea id="text-en" maxlength="280" placeholder="My grandmother left a glass of water by my bed when I had a fever."></textarea>
+      </label>
+      <span class="count" id="count">0 / 280</span>
+      <div class="pair">
+        <label class="field">The same, in your own language (optional)
+          <textarea id="text-native" maxlength="280"></textarea>
+        </label>
+        <label class="field">Which language?
+          <input type="text" id="lang" maxlength="30" placeholder="e.g. Malay">
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><h2><span class="n">04</span>How it is shown</h2></legend>
+      <div class="choice">
+        <label><input type="radio" name="show" value="photo" checked><span>Photo and words<small>Your photo and your words appear on the map.</small></span></label>
+        <label><input type="radio" name="show" value="words"><span>Words only<small>Your words appear; the photo stays private and only its colour is used.</small></span></label>
+        <label><input type="radio" name="show" value="dot"><span>A dot only<small>Only a coloured dot appears at the place.</small></span></label>
+      </div>
+      <label class="field">How should we credit you? (optional)
+        <input type="text" id="credit" maxlength="60" placeholder="Leave empty to stay anonymous">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend><h2><span class="n">05</span>Consent</h2></legend>
+      <div class="consent">
+        <label><input type="checkbox" id="consent" required><span>I took this photo or may share it, and I agree it can be shown on this site and in Touch of Water exhibitions as I chose above.</span></label>
+        <label><input type="checkbox" id="archive"><span>Keep it in the Touch of Water archive after the exhibition (optional).</span></label>
+      </div>
+      <p class="small">Each contribution is checked before it appears. To remove yours at any time, email bin.youn@rmit.edu.vn with the code you get after sending.</p>
+    </fieldset>
+
+    <input type="text" id="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+    <div class="row" style="gap:1rem">
+      <button type="submit" class="primary" id="send">Send my water</button>
+      <span class="status" id="status" role="status" aria-live="polite"></span>
+    </div>
+  </form>
+
+  <section class="done" id="done" aria-live="polite">
+    <h2>Thank you</h2>
+    <p><span class="dot" id="done-swatch"></span>Your water joins the map once it has been checked.</p>
+    <p>Your code is <code id="done-code"></code>. Keep it if you may want it removed later.</p>
+    <div class="row"><button type="button" id="again">Send another</button></div>
+  </section>
+
+  <footer>
+    The dots are the waters shared so far, each in the colour of its photo.<br>
+    Touch of Water · Bin Youn · RMIT University Vietnam
+  </footer>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// Water Atlas: anyone sends one photo of a water they remember, the place it comes from,
+// and a line in English and their own language (the same fields as a team in teams.json).
+// Before anything leaves the phone, the photo is redrawn smaller on a canvas (which drops
+// its EXIF, GPS included) and the place is rounded to about 1 km. The receiver is a Google
+// Apps Script web app: atlas/Code.gs. Setup and moderation: atlas/README.md.
+
+// Paste the Apps Script web app URL here after deploying it.
+// Empty = test mode: the page reads the photo but sends nothing.
+const ATLAS_ENDPOINT = '';
+
+const MAX_SIDE = 1600;     // px, longest side of the photo that is sent
+const JPEG_QUALITY = 0.85;
+const PLACE_DECIMALS = 2;  // 0.01° ≈ 1.1 km: the neighbourhood, never the house
+const TEXT_MAX = 280;
+
+const CITIES = {
+  jakarta: [-6.2, 106.85],
+  kl: [3.14, 101.69],
+  hcmc: [10.78, 106.7],
+};
+
+const $ = (id) => document.getElementById(id);
+const round = (v) => Number(v.toFixed(PLACE_DECIMALS));
+const testMode = ATLAS_ENDPOINT === '';
+const source = (() => {
+  const s = new URLSearchParams(location.search).get('src') || 'web';
+  return /^[a-z0-9-]{1,32}$/.test(s) ? s : 'web';
+})();
+
+let photo = null;   // base64 JPEG, no data: prefix
+let colour = null;  // #rrggbb
+let place = null;   // [lat, lng], rounded
+
+// ── Photo ────────────────────────────────────────────────────────────────
+
+async function decode(file) {
+  try {
+    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    return { img: bmp, w: bmp.width, h: bmp.height };
+  } catch {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    URL.revokeObjectURL(url);
+    return { img, w: img.naturalWidth, h: img.naturalHeight };
+  }
+}
+
+// The photo's mean colour, lifted a little so dark water still shows on the dark map.
+function meanColour(img, w, h) {
+  const c = document.createElement('canvas');
+  const s = 48 / Math.max(w, h);
+  c.width = Math.max(1, Math.round(w * s)); c.height = Math.max(1, Math.round(h * s));
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+  const px = ctx.getImageData(0, 0, c.width, c.height).data;
+  let r = 0, g = 0, b = 0;
+  for (let i = 0; i < px.length; i += 4) { r += px[i]; g += px[i + 1]; b += px[i + 2]; }
+  const n = px.length / 4;
+  const lift = (v) => Math.round(60 + (v / n) * (195 / 255)).toString(16).padStart(2, '0');
+  return `#${lift(r)}${lift(g)}${lift(b)}`;
+}
+
+// Redraw at most MAX_SIDE on the longest side. A canvas carries no EXIF, so the
+// photo's own GPS and camera data never leave the phone.
+async function shrink(img, w, h) {
+  const s = Math.min(1, MAX_SIDE / Math.max(w, h));
+  const c = document.createElement('canvas');
+  c.width = Math.round(w * s); c.height = Math.round(h * s);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  const blob = await new Promise((ok, fail) =>
+    c.toBlob((b) => (b ? ok(b) : fail(new Error('Could not read the photo'))), 'image/jpeg', JPEG_QUALITY));
+  const dataUrl = await new Promise((ok, fail) => {
+    const fr = new FileReader();
+    fr.onload = () => ok(String(fr.result));
+    fr.onerror = () => fail(fr.error);
+    fr.readAsDataURL(blob);
+  });
+  return dataUrl.slice(dataUrl.indexOf(',') + 1);
+}
+
+$('photo').addEventListener('change', async (ev) => {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  status('Reading your photo…');
+  try {
+    const { img, w, h } = await decode(file);
+    colour = meanColour(img, w, h);
+    photo = await shrink(img, w, h);
+    $('preview-img').src = `data:image/jpeg;base64,${photo}`;
+    $('swatch').style.background = colour;
+    $('preview').classList.add('on');
+    status('');
+  } catch {
+    photo = null; colour = null;
+    status('This photo could not be read. Try a JPEG or PNG.', true);
+  }
+});
+
+// ── Place ────────────────────────────────────────────────────────────────
+
+const map = L.map('map', { worldCopyJump: true, scrollWheelZoom: false }).setView([4, 104], 4);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 18,
+  attribution: 'Imagery © Esri',
+}).addTo(map);
+let pin = null;
+
+function setPlace(lat, lng) {
+  place = [round(lat), round(lng)];
+  if (pin) pin.setLatLng(place);
+  else pin = L.circle(place, { radius: 550, color: '#fff', weight: 1.5, fillColor: '#fff', fillOpacity: 0.15 }).addTo(map);
+  $('coords').textContent = `≈ ${place[0].toFixed(2)}, ${place[1].toFixed(2)} (rounded to about 1 km)`;
+}
+
+map.on('click', (e) => setPlace(e.latlng.lat, e.latlng.lng));
+
+document.querySelectorAll('[data-city]').forEach((b) =>
+  b.addEventListener('click', () => map.setView(CITIES[b.dataset.city], 11)));
+
+$('locate').addEventListener('click', () => {
+  if (!navigator.geolocation) return status('Your browser cannot share a location; tap the map instead.', true);
+  status('Finding you…');
+  navigator.geolocation.getCurrentPosition(
+    (p) => { setPlace(p.coords.latitude, p.coords.longitude); map.setView([p.coords.latitude, p.coords.longitude], 14); status(''); },
+    () => status('Location was not shared; tap the map instead.', true),
+    { enableHighAccuracy: false, timeout: 10000 });
+});
+
+// The partner city a place belongs to: within about 60 km of its centre, else elsewhere.
+function cityOf(lat, lng) {
+  for (const [name, [clat, clng]] of Object.entries(CITIES)) {
+    if (Math.hypot(lat - clat, (lng - clng) * Math.cos((lat * Math.PI) / 180)) < 0.55) return name;
+  }
+  return 'elsewhere';
+}
+
+// ── Send ─────────────────────────────────────────────────────────────────
+
+function status(msg, error = false) {
+  $('status').textContent = msg;
+  $('status').classList.toggle('error', error);
+}
+
+$('text-en').addEventListener('input', (e) => {
+  $('count').textContent = `${e.target.value.length} / ${TEXT_MAX}`;
+});
+
+$('atlas').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  if (!photo) return status('Please choose a photo first.', true);
+  if (!place) return status('Please mark the place on the map.', true);
+  if (!$('consent').checked) return status('Please tick the consent box.', true);
+
+  const payload = {
+    photo,
+    lat: place[0],
+    lng: place[1],
+    city: cityOf(place[0], place[1]),
+    place: $('place').value.trim(),
+    textEn: $('text-en').value.trim(),
+    textNative: $('text-native').value.trim(),
+    lang: $('lang').value.trim(),
+    credit: $('credit').value.trim(),
+    show: document.querySelector('input[name=show]:checked').value,
+    consent: true,
+    archive: $('archive').checked,
+    colour,
+    source,
+    website: $('website').value, // honeypot: people leave it empty
+  };
+
+  $('send').disabled = true;
+  status('Sending…');
+  try {
+    let code = 'TEST';
+    if (testMode) {
+      console.info('[atlas] test mode, not sent:', { ...payload, photo: `${Math.round(photo.length * 0.75 / 1024)} KB jpeg` });
+    } else {
+      // A plain string body is sent as text/plain, a simple request, so Apps Script needs no CORS preflight.
+      const res = await fetch(ATLAS_ENDPOINT, { method: 'POST', body: JSON.stringify(payload) });
+      const out = await res.json();
+      if (!out.ok) throw new Error(out.error || 'not saved');
+      code = out.id;
+    }
+    $('done-swatch').style.background = colour;
+    $('done-code').textContent = code;
+    $('atlas').hidden = true;
+    $('done').classList.add('on');
+    $('done').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    status('');
+  } catch {
+    status('It did not send. Check your connection and try again.', true);
+  } finally {
+    $('send').disabled = false;
+  }
+});
+
+$('again').addEventListener('click', () => {
+  $('atlas').reset();
+  photo = null; colour = null;
+  $('preview').classList.remove('on');
+  $('count').textContent = `0 / ${TEXT_MAX}`;
+  $('done').classList.remove('on');
+  $('atlas').hidden = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ── Waters so far (approved only) ────────────────────────────────────────
+
+async function loadWaters() {
+  if (testMode) return;
+  try {
+    const { entries } = await (await fetch(ATLAS_ENDPOINT)).json();
+    for (const e of entries) {
+      const pop = document.createElement('div');
+      const add = (tag, text, cls) => { const el = document.createElement(tag); el.textContent = text; if (cls) el.className = cls; pop.append(el); };
+      if (e.photo) { const img = document.createElement('img'); img.src = e.photo; img.alt = ''; img.loading = 'lazy'; pop.append(img); }
+      if (e.place) add('b', e.place);
+      if (e.textEn) add('p', e.textEn);
+      if (e.textNative) add('p', e.textNative, 'native');
+      if (e.credit) add('p', `— ${e.credit}`, 'native');
+      const dot = L.circleMarker([e.lat, e.lng], { radius: 7, color: '#fff', weight: 1, fillColor: e.colour, fillOpacity: 0.95 }).addTo(map);
+      if (pop.childNodes.length) dot.bindPopup(pop);
+    }
+  } catch {
+    // The map still works for marking a place if the list cannot load.
+  }
+}
+
+if (testMode) $('test-mode').hidden = false;
+loadWaters();
+</script>
+</body>
+</html>
