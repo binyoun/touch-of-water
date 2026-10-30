@@ -139,7 +139,7 @@ To add a new edition: copy the `mmu-2026` folder shape, fill in its `teams.json`
 
 ## Water Atlas
 
-The participant layer, open beyond the workshop: anyone sends a photo of a water they remember, its place (rounded to about 1 km) and a sentence in English and their own language. Each becomes a dot on a shared map. Page: `atlas.html`. Receiver, setup and moderation: [`atlas/README.md`](atlas/README.md).
+The participant layer, open beyond the workshop: anyone sends a photo of a water they remember, its place (rounded to about 1 km) and a sentence in English and their own language. Each becomes a dot on a shared map. Page: `atlas.html`. Receiver (Supabase), setup and moderation: [`atlas/README.md`](atlas/README.md).
 
 ---
 

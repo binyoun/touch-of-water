@@ -121,7 +121,7 @@
     <div class="sub"><a href="./">Touch of Water</a> · Jakarta · Kuala Lumpur · Ho Chi Minh City</div>
     <p class="lede">Send a photo of a water you remember, and the place it comes from: a canal, a well, a tap, rain on a roof, a glass of water left by your bed. Each one becomes a point on the Touch of Water map, joining the memories mapped at MMU.</p>
     <p class="langs">Atlas Air · Bản đồ nước · 水的地图 · 물의 지도 — write in any language.</p>
-    <p id="test-mode" class="test" hidden>Test mode: the page reads your photo but sends nothing. Set ATLAS_ENDPOINT in atlas.html to open it.</p>
+    <p id="test-mode" class="test" hidden>Test mode: the page reads your photo but sends nothing. Set SUPABASE_URL and SUPABASE_KEY in atlas.html to open it.</p>
   </header>
 
   <form id="atlas" novalidate>
@@ -218,12 +218,14 @@
 // Water Atlas: anyone sends one photo of a water they remember, the place it comes from,
 // and a line in English and their own language (the same fields as a team in teams.json).
 // Before anything leaves the phone, the photo is redrawn smaller on a canvas (which drops
-// its EXIF, GPS included) and the place is rounded to about 1 km. The receiver is a Google
-// Apps Script web app: atlas/Code.gs. Setup and moderation: atlas/README.md.
+// its EXIF, GPS included) and the place is rounded to about 1 km. The receiver is a Supabase
+// project set up by atlas/supabase.sql. Setup and moderation: atlas/README.md.
 
-// Paste the Apps Script web app URL here after deploying it.
+// The project URL and its publishable (anon) key, from Project Settings → API Keys.
+// The key is meant to be public: the database only lets it add pending rows and read approved ones.
 // Empty = test mode: the page reads the photo but sends nothing.
-const ATLAS_ENDPOINT = '';
+const SUPABASE_URL = 'https://rjrtvqhvyicitoeyrudp.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_YLeaauNon9rGzbGzlL7sIQ_B1H8XTN6';
 
 const MAX_SIDE = 1600;     // px, longest side of the photo that is sent
 const JPEG_QUALITY = 0.85;
@@ -238,7 +240,19 @@ const CITIES = {
 
 const $ = (id) => document.getElementById(id);
 const round = (v) => Number(v.toFixed(PLACE_DECIMALS));
-const testMode = ATLAS_ENDPOINT === '';
+const testMode = SUPABASE_URL === '' || SUPABASE_KEY === '';
+// Legacy anon keys are JWTs and also go in Authorization; new publishable keys go in apikey only.
+const auth = { apikey: SUPABASE_KEY, ...(SUPABASE_KEY.startsWith('eyJ') ? { Authorization: `Bearer ${SUPABASE_KEY}` } : {}) };
+
+async function api(path, body, type = 'application/json') {
+  const res = await fetch(`${SUPABASE_URL}${path}`, {
+    method: 'POST',
+    headers: { ...auth, 'Content-Type': type },
+    body: type === 'application/json' ? JSON.stringify(body) : body,
+  });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
+}
 const source = (() => {
   const s = new URLSearchParams(location.search).get('src') || 'web';
   return /^[a-z0-9-]{1,32}$/.test(s) ? s : 'web';
@@ -371,7 +385,6 @@ $('atlas').addEventListener('submit', async (ev) => {
   if (!$('consent').checked) return status('Please tick the consent box.', true);
 
   const payload = {
-    photo,
     lat: place[0],
     lng: place[1],
     city: cityOf(place[0], place[1]),
@@ -395,9 +408,11 @@ $('atlas').addEventListener('submit', async (ev) => {
     if (testMode) {
       console.info('[atlas] test mode, not sent:', { ...payload, photo: `${Math.round(photo.length * 0.75 / 1024)} KB jpeg` });
     } else {
-      // A plain string body is sent as text/plain, a simple request, so Apps Script needs no CORS preflight.
-      const res = await fetch(ATLAS_ENDPOINT, { method: 'POST', body: JSON.stringify(payload) });
-      const out = await res.json();
+      // The photo goes first, under a random name; atlas_submit then checks it is there and unused.
+      const photoPath = `in/${crypto.randomUUID()}.jpg`;
+      const blob = await (await fetch(`data:image/jpeg;base64,${photo}`)).blob();
+      await api(`/storage/v1/object/atlas/${photoPath}`, blob, 'image/jpeg');
+      const out = await api('/rest/v1/rpc/atlas_submit', { d: { ...payload, photoPath } });
       if (!out.ok) throw new Error(out.error || 'not saved');
       code = out.id;
     }
@@ -429,7 +444,14 @@ $('again').addEventListener('click', () => {
 async function loadWaters() {
   if (testMode) return;
   try {
-    const { entries } = await (await fetch(ATLAS_ENDPOINT)).json();
+    const entries = await api('/rest/v1/rpc/atlas_entries', {});
+    // Photos stay in a private bucket; approved ones get a link that lasts an hour.
+    const paths = entries.map((e) => e.photoPath).filter(Boolean);
+    if (paths.length) {
+      const signed = await api('/storage/v1/object/sign/atlas', { expiresIn: 3600, paths });
+      const urls = Object.fromEntries(signed.filter((s) => s.signedURL).map((s) => [s.path, `${SUPABASE_URL}/storage/v1${s.signedURL}`]));
+      for (const e of entries) if (e.photoPath) e.photo = urls[e.photoPath];
+    }
     for (const e of entries) {
       const pop = document.createElement('div');
       const add = (tag, text, cls) => { const el = document.createElement(tag); el.textContent = text; if (cls) el.className = cls; pop.append(el); };
